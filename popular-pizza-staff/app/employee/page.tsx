@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
+
 export default function EmployeeDashboard() {
+  const [clockedIn, setClockedIn] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
@@ -9,12 +15,24 @@ export default function EmployeeDashboard() {
 
         <div className="rounded-3xl bg-white p-6 text-center shadow">
           <p className="text-sm font-medium text-gray-500">Current Status</p>
-          <h2 className="mt-2 text-4xl font-black text-red-600">
-            Clocked Out
-          </h2>
 
-          <button className="mt-6 w-full rounded-2xl bg-green-600 p-4 text-lg font-bold text-white shadow hover:bg-green-700">
-            Clock In
+         <h2
+  className={`mt-2 text-4xl font-black ${
+    clockedIn ? "text-green-600" : "text-red-600"
+  }`}
+>
+  {clockedIn ? "Clocked In" : "Clocked Out"}
+</h2>
+
+          <button
+            onClick={() => setClockedIn(!clockedIn)}
+            className={`mt-6 w-full rounded-2xl p-4 text-lg font-bold !text-white shadow ${
+              clockedIn
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {clockedIn ? "Clock Out" : "Clock In"}
           </button>
         </div>
 
