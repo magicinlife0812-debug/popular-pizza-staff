@@ -20,6 +20,7 @@ type Shift = {
 };
 
 const PAY_PERIOD_START = new Date("2026-06-01T00:00:00");
+const hourlyRate = 17.2;
 
 function getCurrentPayPeriod() {
   const now = new Date();
@@ -51,7 +52,13 @@ export default function HistoryPage() {
 
   const totalHours = periodShifts.reduce((sum, shift) => sum + shift.hours, 0);
   const totalTips = periodShifts.reduce((sum, shift) => sum + shift.tips, 0);
-  const totalMileage = periodShifts.reduce((sum, shift) => sum + shift.mileage, 0);
+  const totalMileage = periodShifts.reduce(
+    (sum, shift) => sum + shift.mileage,
+    0
+  );
+
+  const regularPay = totalHours * hourlyRate;
+  const estimatedTotal = regularPay + totalTips + totalMileage;
 
   return (
     <main className="min-h-screen bg-gray-100 p-4">
@@ -62,6 +69,7 @@ export default function HistoryPage() {
           </Link>
 
           <h1 className="mt-3 text-2xl font-bold">Shift History</h1>
+
           <p className="text-sm opacity-90">
             {start.toLocaleDateString()} – {end.toLocaleDateString()}
           </p>
@@ -71,6 +79,31 @@ export default function HistoryPage() {
           <SummaryCard title="Hours" value={totalHours.toFixed(2)} />
           <SummaryCard title="Tips" value={`$${totalTips.toFixed(2)}`} />
           <SummaryCard title="Mileage" value={`$${totalMileage.toFixed(2)}`} />
+        </div>
+
+        <div className="rounded-3xl bg-white p-5 shadow">
+          <p className="text-sm text-gray-500">Estimated Pay</p>
+
+          <h2 className="mt-2 text-4xl font-black text-green-600">
+            ${estimatedTotal.toFixed(2)}
+          </h2>
+
+          <div className="mt-4 space-y-2 text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Hourly Pay</span>
+              <strong>${regularPay.toFixed(2)}</strong>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Tips</span>
+              <strong>${totalTips.toFixed(2)}</strong>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Mileage</span>
+              <strong>${totalMileage.toFixed(2)}</strong>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-3xl bg-white p-5 shadow">
@@ -87,14 +120,22 @@ export default function HistoryPage() {
                   </p>
 
                   <p className="mt-1 text-sm text-gray-500">
-                    {new Date(shift.clockIn).toLocaleTimeString()} →{" "}
+                    {new Date(shift.clockIn).toLocaleTimeString()} {" → "}
                     {new Date(shift.clockOut).toLocaleTimeString()}
                   </p>
 
                   <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-                    <p><strong>{shift.hours.toFixed(2)}</strong> hrs</p>
-                    <p><strong>${shift.tips.toFixed(2)}</strong> tips</p>
-                    <p><strong>${shift.mileage.toFixed(2)}</strong> mileage</p>
+                    <p>
+                      <strong>{shift.hours.toFixed(2)}</strong> hrs
+                    </p>
+
+                    <p>
+                      <strong>${shift.tips.toFixed(2)}</strong> tips
+                    </p>
+
+                    <p>
+                      <strong>${shift.mileage.toFixed(2)}</strong> mileage
+                    </p>
                   </div>
 
                   <p className="mt-2 text-xs text-gray-500">
