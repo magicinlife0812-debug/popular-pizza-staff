@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { employee } from "@/app/data/employee";
 
 const mileageRates = {
   under5: 1.5,
@@ -195,9 +196,15 @@ export default function EmployeeDashboard() {
           )}
 
           <p className="text-sm opacity-90">Popular Pizza Staff Portal</p>
-          <h1 className="mt-1 text-2xl font-bold">Welcome back, Tanvir 👋</h1>
-        </div>
 
+<h1 className="mt-1 text-2xl font-bold">
+  Welcome back, {employee.name} 👋
+</h1>
+
+<p className="mt-2 text-sm font-medium text-red-100">
+  {employee.role} • ${employee.hourlyRate.toFixed(2)}/hr
+</p>
+</div>
         <div className="rounded-3xl bg-white p-6 text-center shadow">
           <p className="text-sm font-medium text-gray-500">Current Status</p>
 

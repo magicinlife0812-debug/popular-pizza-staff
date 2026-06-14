@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { employee } from "@/app/data/employee";
 
 type Shift = {
   id: string;
@@ -20,7 +21,6 @@ type Shift = {
 };
 
 const PAY_PERIOD_START = new Date("2026-06-01T00:00:00");
-const hourlyRate = 17.2;
 
 function getCurrentPayPeriod() {
   const now = new Date();
@@ -51,13 +51,15 @@ export default function HistoryPage() {
   });
 
   const totalHours = periodShifts.reduce((sum, shift) => sum + shift.hours, 0);
+
   const totalTips = periodShifts.reduce((sum, shift) => sum + shift.tips, 0);
+
   const totalMileage = periodShifts.reduce(
     (sum, shift) => sum + shift.mileage,
     0
   );
 
-  const regularPay = totalHours * hourlyRate;
+  const regularPay = totalHours * employee.hourlyRate;
   const estimatedTotal = regularPay + totalTips + totalMileage;
 
   return (
