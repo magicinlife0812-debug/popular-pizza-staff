@@ -6,7 +6,12 @@ export default function EmployeeDashboard() {
   const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [todayHours, setTodayHours] = useState(0);
-    const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [tipEntries, setTipEntries] = useState<number[]>([]);
+  const [tipInput, setTipInput] = useState("");
+  const [showTipModal, setShowTipModal] = useState(false);
+
+  const totalTips = tipEntries.reduce((sum, tip) => sum + tip, 0);
 
   function handleClockButton() {
     if (!clockedIn) {
@@ -16,7 +21,6 @@ export default function EmployeeDashboard() {
     } else {
       if (clockInTime) {
         const clockOutTime = new Date();
-
         const millisecondsWorked =
           clockOutTime.getTime() - clockInTime.getTime();
 
@@ -29,20 +33,21 @@ export default function EmployeeDashboard() {
       setClockInTime(null);
     }
   }
-useEffect(() => {
-  if (!clockedIn || !clockInTime) return;
 
-  const timer = setInterval(() => {
-    const now = new Date();
-    const seconds = Math.floor(
-      (now.getTime() - clockInTime.getTime()) / 1000
-    );
+  useEffect(() => {
+    if (!clockedIn || !clockInTime) return;
 
-    setElapsedSeconds(seconds);
-  }, 1000);
+    const timer = setInterval(() => {
+      const now = new Date();
+      const seconds = Math.floor(
+        (now.getTime() - clockInTime.getTime()) / 1000
+      );
 
-  return () => clearInterval(timer);
-}, [clockedIn, clockInTime]);
+      setElapsedSeconds(seconds);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [clockedIn, clockInTime]);
 
   return (
     <main className="min-h-screen bg-gray-100 p-4">
@@ -55,9 +60,7 @@ useEffect(() => {
         </div>
 
         <div className="rounded-3xl bg-white p-6 text-center shadow">
-          <p className="text-sm font-medium text-gray-500">
-            Current Status
-          </p>
+          <p className="text-sm font-medium text-gray-500">Current Status</p>
 
           <h2
             className={`mt-2 text-4xl font-black ${
@@ -74,14 +77,15 @@ useEffect(() => {
           )}
 
           {clockedIn && (
-  <p className="mt-2 text-2xl font-bold text-gray-900">
-    {Math.floor(elapsedSeconds / 3600)}h{" "}
-    {Math.floor((elapsedSeconds % 3600) / 60)}m{" "}
-    {elapsedSeconds % 60}s
-  </p>
-)}
+            <p className="mt-2 text-2xl font-bold text-gray-900">
+              {Math.floor(elapsedSeconds / 3600)}h{" "}
+              {Math.floor((elapsedSeconds % 3600) / 60)}m{" "}
+              {elapsedSeconds % 60}s
+            </p>
+          )}
 
           <button
+            type="button"
             onClick={handleClockButton}
             className={`mt-6 w-full rounded-2xl p-4 text-lg font-bold !text-white shadow ${
               clockedIn
@@ -109,18 +113,100 @@ useEffect(() => {
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow">
-            <p className="text-sm text-gray-500">Tips</p>
-            <h3 className="mt-1 text-2xl font-bold text-gray-900">$0</h3>
+            <div className="flex items-start justify-between">
+              <p className="text-sm text-gray-500">Tips</p>
+
+              <button
+                type="button"
+                onClick={() => setShowTipModal(true)}
+                className="flex h-8 w-8 min-h-8 min-w-8 items-center justify-center rounded-full bg-red-600 text-lg font-bold !text-white shadow hover:bg-red-700"
+              >
+                +
+              </button>
+            </div>
+
+            <h3 className="mt-4 text-2xl font-bold text-gray-900">
+              ${totalTips.toFixed(2)}
+            </h3>
+
+            {tipEntries.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {tipEntries.map((tip, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-sm"
+                  >
+                    <span className="font-semibold text-green-600">
+                      +${tip.toFixed(2)}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTipEntries((prev) =>
+                          prev.filter((_, i) => i !== index)
+                        );
+                      }}
+                      className="font-bold text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow">
             <p className="text-sm text-gray-500">Mileage</p>
-            <h3 className="mt-1 text-2xl font-bold text-gray-900">
-              0 km
-            </h3>
+            <h3 className="mt-1 text-2xl font-bold text-gray-900">0 km</h3>
           </div>
         </div>
       </div>
+
+      {showTipModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-900">Add Tip</h2>
+
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Enter amount"
+              value={tipInput}
+              onChange={(e) => setTipInput(e.target.value)}
+              className="mt-4 w-full rounded-xl border border-gray-300 p-3 text-lg text-gray-900"
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                const amount = Number(tipInput);
+
+                if (!isNaN(amount) && amount > 0) {
+                  setTipEntries((prev) => [...prev, amount]);
+                  setTipInput("");
+                  setShowTipModal(false);
+                }
+              }}
+              className="mt-4 w-full rounded-xl bg-red-600 p-3 font-bold !text-white"
+            >
+              Save Tip
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTipInput("");
+                setShowTipModal(false);
+              }}
+              className="mt-3 w-full rounded-xl border p-3 font-bold text-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
