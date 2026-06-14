@@ -12,6 +12,7 @@ export default function EmployeeDashboard() {
   const [showTipModal, setShowTipModal] = useState(false);
 
   const totalTips = tipEntries.reduce((sum, tip) => sum + tip, 0);
+  const lastTip = tipEntries[tipEntries.length - 1];
 
   function handleClockButton() {
     if (!clockedIn) {
@@ -25,7 +26,6 @@ export default function EmployeeDashboard() {
           clockOutTime.getTime() - clockInTime.getTime();
 
         const hoursWorked = millisecondsWorked / (1000 * 60 * 60);
-
         setTodayHours((prev) => prev + hoursWorked);
       }
 
@@ -125,34 +125,25 @@ export default function EmployeeDashboard() {
               </button>
             </div>
 
-            <h3 className="mt-4 text-2xl font-bold text-gray-900">
+            <h3 className="mt-4 truncate text-2xl font-bold text-gray-900">
               ${totalTips.toFixed(2)}
             </h3>
 
             {tipEntries.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {tipEntries.map((tip, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-sm"
-                  >
-                    <span className="font-semibold text-green-600">
-                      +${tip.toFixed(2)}
-                    </span>
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
+                <span className="truncate text-sm font-semibold text-green-600">
+                  Last: +${lastTip.toFixed(2)}
+                </span>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTipEntries((prev) =>
-                          prev.filter((_, i) => i !== index)
-                        );
-                      }}
-                      className="font-bold text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTipEntries((prev) => prev.slice(0, -1));
+                  }}
+                  className="ml-2 font-bold text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
               </div>
             )}
           </div>
