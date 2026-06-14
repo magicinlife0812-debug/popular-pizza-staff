@@ -20,6 +20,12 @@ type Shift = {
   };
 };
 
+type EmployeeProfile = {
+  name: string;
+  roles: string[];
+  hourlyRate: number;
+};
+
 const PAY_PERIOD_START = new Date("2026-06-01T00:00:00");
 
 function getCurrentPayPeriod() {
@@ -38,9 +44,20 @@ function getCurrentPayPeriod() {
 
 export default function HistoryPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [employeeProfile, setEmployeeProfile] = useState<EmployeeProfile>({
+    name: employee.name,
+    roles: ["Driver"],
+    hourlyRate: employee.hourlyRate,
+  });
 
   useEffect(() => {
     setShifts(JSON.parse(localStorage.getItem("shiftHistory") || "[]"));
+
+    const savedProfile = localStorage.getItem("employeeProfile");
+
+    if (savedProfile) {
+      setEmployeeProfile(JSON.parse(savedProfile));
+    }
   }, []);
 
   const { start, end } = getCurrentPayPeriod();
@@ -59,7 +76,7 @@ export default function HistoryPage() {
     0
   );
 
-  const regularPay = totalHours * employee.hourlyRate;
+  const regularPay = totalHours * employeeProfile.hourlyRate;
   const estimatedTotal = regularPay + totalTips + totalMileage;
 
   return (
@@ -71,6 +88,10 @@ export default function HistoryPage() {
           </Link>
 
           <h1 className="mt-3 text-2xl font-bold">Shift History</h1>
+
+          <p className="mt-1 text-sm opacity-90">
+            {employeeProfile.name} • {employeeProfile.roles.join(" • ")}
+          </p>
 
           <p className="text-sm opacity-90">
             {start.toLocaleDateString()} – {end.toLocaleDateString()}
@@ -104,6 +125,11 @@ export default function HistoryPage() {
             <div className="flex justify-between">
               <span>Mileage</span>
               <strong>${totalMileage.toFixed(2)}</strong>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Rate</span>
+              <strong>${employeeProfile.hourlyRate.toFixed(2)}/hr</strong>
             </div>
           </div>
         </div>

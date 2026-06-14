@@ -14,7 +14,12 @@ const mileageRates = {
 type MileageType = "under5" | "over5" | "aerosports" | "funzone";
 
 export default function EmployeeDashboard() {
-  const [clockedIn, setClockedIn] = useState(false);
+  const [employeeProfile, setEmployeeProfile] = useState({
+  name: employee.name,
+  roles: ["Driver"],
+  hourlyRate: employee.hourlyRate,
+});
+    const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [todayHours, setTodayHours] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -114,28 +119,36 @@ export default function EmployeeDashboard() {
     return () => clearInterval(timer);
   }, [clockedIn, clockInTime]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("activeShift");
+ useEffect(() => {
+  const savedProfile = localStorage.getItem("employeeProfile");
 
-    if (saved) {
-      const data = JSON.parse(saved);
+  if (savedProfile) {
+    setEmployeeProfile(JSON.parse(savedProfile));
+  }
 
-      setClockedIn(data.clockedIn ?? false);
-      setClockInTime(data.clockInTime ? new Date(data.clockInTime) : null);
-      setTodayHours(data.todayHours ?? 0);
-      setTipEntries(data.tipEntries ?? []);
-      setMileageCounts(
-        data.mileageCounts ?? {
-          under5: 0,
-          over5: 0,
-          aerosports: 0,
-          funzone: 0,
-        }
-      );
-    }
+  const saved = localStorage.getItem("activeShift");
 
-    setHasLoadedSavedData(true);
-  }, []);
+  if (saved) {
+    const data = JSON.parse(saved);
+
+    setClockedIn(data.clockedIn ?? false);
+    setClockInTime(data.clockInTime ? new Date(data.clockInTime) : null);
+    setTodayHours(data.todayHours ?? 0);
+    setTipEntries(data.tipEntries ?? []);
+    setMileageCounts(
+      data.mileageCounts ?? {
+        under5: 0,
+        over5: 0,
+        aerosports: 0,
+        funzone: 0,
+      }
+    );
+  }
+
+  setHasLoadedSavedData(true);
+}, []);
+
+
 
   useEffect(() => {
     if (!hasLoadedSavedData) return;
@@ -204,11 +217,11 @@ export default function EmployeeDashboard() {
           <p className="text-sm opacity-90">Popular Pizza Staff Portal</p>
 
 <h1 className="mt-1 text-2xl font-bold">
-  Welcome back, {employee.name} 👋
+  Welcome back, {employeeProfile.name} 👋
 </h1>
 
 <p className="mt-2 text-sm font-medium text-red-100">
-  {employee.role} • ${employee.hourlyRate.toFixed(2)}/hr
+  {employeeProfile.roles.join(" • ")} • ${employeeProfile.hourlyRate.toFixed(2)}/hr
 </p>
 </div>
         <div className="rounded-3xl bg-white p-6 text-center shadow">
