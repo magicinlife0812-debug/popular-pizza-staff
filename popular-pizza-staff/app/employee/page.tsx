@@ -192,6 +192,12 @@ export default function EmployeeDashboard() {
               >
                 Pay History
               </Link>
+              <Link
+  href="/settings"
+  className="block rounded-xl p-3 hover:bg-gray-100"
+>
+  Settings
+</Link>
             </div>
           )}
 
