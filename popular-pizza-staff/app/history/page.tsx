@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { employee } from "@/app/data/employee";
+import { employees } from "@/app/data/employee";
 
 type Shift = {
   id: string;
@@ -27,6 +27,7 @@ type EmployeeProfile = {
 };
 
 const PAY_PERIOD_START = new Date("2026-06-01T00:00:00");
+const currentEmployee = employees[1];
 
 function getCurrentPayPeriod() {
   const now = new Date();
@@ -45,9 +46,9 @@ function getCurrentPayPeriod() {
 export default function HistoryPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [employeeProfile, setEmployeeProfile] = useState<EmployeeProfile>({
-    name: employee.name,
-    roles: ["Driver"],
-    hourlyRate: employee.hourlyRate,
+    name: currentEmployee.name,
+    roles: currentEmployee.roles,
+    hourlyRate: currentEmployee.hourlyRate,
   });
 
   useEffect(() => {

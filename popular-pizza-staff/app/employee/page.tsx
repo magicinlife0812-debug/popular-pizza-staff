@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { employee } from "@/app/data/employee";
+import { employees } from "@/app/data/employee";
 
 const mileageRates = {
   under5: 1.5,
@@ -15,9 +15,9 @@ type MileageType = "under5" | "over5" | "aerosports" | "funzone";
 
 export default function EmployeeDashboard() {
   const [employeeProfile, setEmployeeProfile] = useState({
-  name: employee.name,
-  roles: ["Driver"],
-  hourlyRate: employee.hourlyRate,
+  name: employees[1].name,
+  roles: employees[1].roles,
+  hourlyRate: employees[1].hourlyRate,
 });
     const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
@@ -59,7 +59,7 @@ export default function EmployeeDashboard() {
 
     const newShift = {
       id: crypto.randomUUID(),
-      employeeName: "Tanvir",
+      employeeName: employees[1].name,
       clockIn: clockInTime.toISOString(),
       clockOut: clockOutTime.toISOString(),
       hours: hoursWorked,

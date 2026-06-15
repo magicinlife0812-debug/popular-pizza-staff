@@ -1,6 +1,19 @@
-export const employee = {
-  name: "Tanvir",
-  role: "Delivery Driver, Insider",
-  hourlyRate: 17.2,
-};
+export const employees = [
+  {
+    id: "MAN001",
+    pin: "9999",
+    name: "Manager",
+    roles: ["Manager", "Kitchen", "Driver"],
+    hourlyRate: 20,
+    canAccessManager: true,
+  },
 
+  {
+    id: "TAN001",
+    pin: "1111",
+    name: "Tanvir",
+    roles: ["Driver", "Kitchen"],
+    hourlyRate: 17.2,
+    canAccessManager: false,
+  },
+];

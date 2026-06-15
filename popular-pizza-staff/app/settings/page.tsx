@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { employee } from "@/app/data/employee";
+import { employees } from "@/app/data/employee";
 
 const availableRoles = ["Driver", "Kitchen", "Manager"];
 
 export default function SettingsPage() {
-  const [name, setName] = useState(employee.name);
-  const [roles, setRoles] = useState<string[]>(["Driver"]);
+  const [name, setName] = useState(employees[1].name);
+  const [roles, setRoles] = useState<string[]>(employees[1].roles);
   const [hourlyRate, setHourlyRate] = useState(
-    employee.hourlyRate.toString()
+    employees[1].hourlyRate.toString()
   );
   const [saved, setSaved] = useState(false);
 
