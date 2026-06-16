@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { addEmployee, getEmployees } from "@/app/lib/employeeStorage";
-
+import { addEmployee, getEmployees, toggleEmployeeActive } from "@/app/lib/employeeStorage";
 const availableRoles = ["Driver", "Kitchen", "Manager"];
 
 type Employee = {
@@ -26,6 +25,8 @@ export default function ManagerEmployeesPage() {
   const [hourlyRate, setHourlyRate] = useState("");
   const [roles, setRoles] = useState<string[]>(["Driver"]);
   const [canAccessManager, setCanAccessManager] = useState(false);
+    const [employeeToToggle, setEmployeeToToggle] = useState<Employee | null>(null);
+
 
   useEffect(() => {
     setEmployees(getEmployees());
@@ -83,6 +84,7 @@ export default function ManagerEmployeesPage() {
   }
 
   return (
+<>
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
         <div className="rounded-3xl bg-red-600 p-5 text-white shadow-lg">
@@ -199,15 +201,18 @@ export default function ManagerEmployeesPage() {
                   <p className="text-sm text-gray-500">{employee.id}</p>
                 </div>
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${
-                    employee.isActive === false
-                      ? "bg-gray-200 text-gray-600"
-                      : "bg-green-100 text-green-700"
-                  }`}
-                >
-                  {employee.isActive === false ? "Inactive" : "Active"}
-                </span>
+               <button
+  type="button"
+  onClick={() => setEmployeeToToggle(employee)}
+  className={`rounded-full px-3 py-1 text-xs font-bold ${
+    employee.isActive === false
+      ? "bg-gray-200 text-gray-600"
+      : "bg-green-100 text-green-700"
+  }`}
+>
+  {employee.isActive === false ? "Inactive" : "Active"}
+</button>
+
               </div>
 
               <p className="mt-3 text-sm text-gray-600">
@@ -228,5 +233,50 @@ export default function ManagerEmployeesPage() {
         </div>
       </div>
     </main>
+
+    {employeeToToggle && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+      <h2 className="text-2xl font-bold text-gray-900">
+        {employeeToToggle.isActive === false
+          ? "Activate Employee?"
+          : "Deactivate Employee?"}
+      </h2>
+
+      <p className="mt-3 text-gray-600">
+        {employeeToToggle.isActive === false
+          ? `Reactivate ${employeeToToggle.name}? They will be able to log in again.`
+          : `Deactivate ${employeeToToggle.name}? They will no longer be able to log in.`}
+      </p>
+
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => setEmployeeToToggle(null)}
+          className="rounded-xl border p-3 font-bold text-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            toggleEmployeeActive(employeeToToggle.id);
+            setEmployees(getEmployees());
+            setEmployeeToToggle(null);
+          }}
+          className={`rounded-xl p-3 font-bold text-white ${
+            employeeToToggle.isActive === false
+              ? "bg-green-600"
+              : "bg-red-600"
+          }`}
+        >
+          {employeeToToggle.isActive === false ? "Activate" : "Deactivate"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+</>
   );
 }

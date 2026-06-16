@@ -41,3 +41,14 @@ export function deactivateEmployee(employeeId: string) {
 
   saveEmployees(updated);
 }
+export function toggleEmployeeActive(employeeId: string) {
+  const employees = getEmployees();
+
+  const updatedEmployees = employees.map((employee: any) =>
+    employee.id === employeeId
+      ? { ...employee, isActive: employee.isActive === false }
+      : employee
+  );
+
+  saveEmployees(updatedEmployees);
+}
