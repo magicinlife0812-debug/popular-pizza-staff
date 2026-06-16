@@ -202,6 +202,13 @@ if (savedEmployee) {
               </Link>
 
               <Link
+                href="/schedule"
+                className="block rounded-xl p-3 hover:bg-gray-100"
+              >
+                Schedule
+              </Link>
+
+              <Link
                 href="/history"
                 className="block rounded-xl p-3 hover:bg-gray-100"
               >

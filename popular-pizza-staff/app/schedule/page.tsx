@@ -68,6 +68,18 @@ export default function SchedulePage() {
     return Math.max(0, (endTotal - startTotal) / 60);
   }
 
+  function formatTime(time: string) {
+  if (!time) return "";
+
+  const [hourText, minute] = time.split(":");
+  const hour = Number(hourText);
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+
+  return `${displayHour}:${minute} ${period}`;
+}
+
   function getEmployeeHours(employeeId: string) {
     return shifts
       .filter((shift) => shift.employeeId === employeeId)
@@ -286,7 +298,7 @@ export default function SchedulePage() {
                                 </p>
 
                                 <p className="text-gray-500">
-                                  {shift.startTime} - {shift.endTime}
+                                 {formatTime(shift.startTime)} - {formatTime(shift.endTime)}
                                 </p>
                               </div>
 

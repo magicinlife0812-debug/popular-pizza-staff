@@ -140,6 +140,21 @@ export default function ManagerDashboard() {
   </p>
 </Link>
 
+        <Link
+  href="/schedule"
+  className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
+>
+  <p className="text-sm text-gray-500">Scheduling</p>
+
+  <h2 className="mt-1 text-xl font-bold text-gray-900">
+    Schedule
+  </h2>
+
+  <p className="mt-2 text-sm text-gray-500">
+    Create, edit, and manage weekly shifts
+  </p>
+</Link>
+
         <div className="rounded-3xl bg-white p-5 shadow">
           <h2 className="text-lg font-bold text-gray-900">Employees</h2>
 
