@@ -127,21 +127,8 @@ export default function ManagerDashboard() {
           <StatCard title="Payroll" value={`$${payroll.toFixed(2)}`} />
         </div>
 
-        <Link
-  href="/manager/employees"
-  className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
->
-  <p className="text-sm text-gray-500">Staff</p>
-  <h2 className="mt-1 text-xl font-bold text-gray-900">
-    Employee Management
-  </h2>
-  <p className="mt-2 text-sm text-gray-500">
-    Add, edit, activate, and deactivate employees
-  </p>
-</Link>
-
-        <Link
-  href="/schedule"
+         <Link
+    href="/schedule?mode=manager"
   className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
 >
   <p className="text-sm text-gray-500">Scheduling</p>
@@ -152,6 +139,19 @@ export default function ManagerDashboard() {
 
   <p className="mt-2 text-sm text-gray-500">
     Create, edit, and manage weekly shifts
+  </p>
+</Link>
+
+        <Link
+  href="/manager/employees"
+  className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
+>
+  <p className="text-sm text-gray-500">Staff</p>
+  <h2 className="mt-1 text-xl font-bold text-gray-900">
+    Employee Management
+  </h2>
+  <p className="mt-2 text-sm text-gray-500">
+    Add, edit, activate, and deactivate employees
   </p>
 </Link>
 

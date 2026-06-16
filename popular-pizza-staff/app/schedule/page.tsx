@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getEmployees } from "@/app/lib/employeeStorage";
 import {
@@ -10,6 +11,7 @@ import {
   ScheduleShift,
   updateScheduleShift,
 } from "@/app/lib/scheduleStorage";
+
 
 type Employee = {
   id: string;
@@ -23,9 +25,15 @@ type Employee = {
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function SchedulePage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+ const searchParams = useSearchParams();
+
+
+    const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<ScheduleShift[]>([]);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+const isManagerMode =
+  searchParams.get("mode") === "manager" &&
+  currentEmployee?.canAccessManager;
 
   const [showAddShift, setShowAddShift] = useState(false);
   const [editingShift, setEditingShift] = useState<ScheduleShift | null>(null);
@@ -173,12 +181,12 @@ export default function SchedulePage() {
 
           <div className="rounded-3xl bg-white p-5 shadow">
   <p className="text-sm text-gray-500">
-    {currentEmployee?.canAccessManager ? "Total Labor Hours" : "My Hours"}
+   {isManagerMode ? "Total Labor Hours" : "My Hours"}
   </p>
 
   <h2 className="mt-1 text-3xl font-black text-gray-900">
-    {currentEmployee?.canAccessManager
-      ? totalLaborHours.toFixed(1)
+   {isManagerMode
+  ? totalLaborHours.toFixed(1)
       : currentEmployee
       ? getEmployeeHours(currentEmployee.id).toFixed(1)
       : "0.0"}{" "}
@@ -186,7 +194,7 @@ export default function SchedulePage() {
   </h2>
 </div>
 
-          {currentEmployee?.canAccessManager && (
+       {isManagerMode && (
             <div className="rounded-3xl bg-white p-5 shadow">
               {!showAddShift ? (
                 <button
@@ -302,7 +310,7 @@ export default function SchedulePage() {
                                 </p>
                               </div>
 
-                              {currentEmployee?.canAccessManager && (
+                              {isManagerMode && (
                                 <button
                                   type="button"
                                   onClick={() => openEditShift(shift)}
