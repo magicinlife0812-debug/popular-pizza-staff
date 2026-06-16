@@ -1,8 +1,8 @@
 export const employees = [
   {
-    id: "MAN001",
+    id: "BAB001",
     pin: "9999",
-    name: "Manager",
+    name: "BABAN",
     roles: ["Manager", "Kitchen", "Driver"],
     hourlyRate: 20,
     canAccessManager: true,
