@@ -52,3 +52,13 @@ export function toggleEmployeeActive(employeeId: string) {
 
   saveEmployees(updatedEmployees);
 }
+
+    export function updateEmployee(updatedEmployee: any) {
+  const employees = getEmployees();
+
+  const updatedEmployees = employees.map((employee: any) =>
+    employee.id === updatedEmployee.id ? updatedEmployee : employee
+  );
+
+  saveEmployees(updatedEmployees);
+}

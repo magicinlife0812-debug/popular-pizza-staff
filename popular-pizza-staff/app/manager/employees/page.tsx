@@ -6,6 +6,7 @@ import {
   addEmployee,
   getEmployees,
   toggleEmployeeActive,
+  updateEmployee,
 } from "@/app/lib/employeeStorage";
 
 const availableRoles = ["Driver", "Kitchen", "Manager"];
@@ -305,26 +306,139 @@ export default function ManagerEmployeesPage() {
       )}
 
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Edit Employee
-            </h2>
+  <EditEmployeeModal
+    employee={editingEmployee}
+    onClose={() => setEditingEmployee(null)}
+    onSave={(updatedEmployee) => {
+      updateEmployee(updatedEmployee);
+      setEmployees(getEmployees());
+      setEditingEmployee(null);
+    }}
+  />
+)}
+    </>
+  );
+}
+function EditEmployeeModal({
+  employee,
+  onClose,
+  onSave,
+}: {
+  employee: Employee;
+  onClose: () => void;
+  onSave: (employee: Employee) => void;
+}) {
+  const [name, setName] = useState(employee.name);
+  const [pin, setPin] = useState(employee.pin);
+  const [hourlyRate, setHourlyRate] = useState(
+    employee.hourlyRate.toString()
+  );
+  const [roles, setRoles] = useState<string[]>(employee.roles);
+  const [canAccessManager, setCanAccessManager] = useState(
+    employee.canAccessManager
+  );
 
-            <p className="mt-3 text-gray-600">
-              Editing {editingEmployee.name}
-            </p>
+  function toggleRole(role: string) {
+    setRoles((prev) => {
+      const updatedRoles = prev.includes(role)
+        ? prev.filter((item) => item !== role)
+        : [...prev, role];
+
+      if (role === "Manager") {
+        setCanAccessManager(updatedRoles.includes("Manager"));
+      }
+
+      return updatedRoles;
+    });
+  }
+
+  function handleSave() {
+    if (!name.trim() || !pin.trim() || !hourlyRate.trim() || roles.length === 0) {
+      return;
+    }
+
+    onSave({
+      ...employee,
+      name: name.trim(),
+      pin: pin.trim(),
+      hourlyRate: Number(hourlyRate),
+      roles,
+      canAccessManager,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-xl">
+        <h2 className="text-2xl font-bold text-gray-900">Edit Employee</h2>
+
+        <p className="mt-1 text-sm text-gray-500">{employee.id}</p>
+
+        <div className="mt-5 space-y-3">
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Name"
+            className="w-full rounded-xl border p-3 text-gray-900"
+          />
+
+          <input
+            value={pin}
+            onChange={(event) => setPin(event.target.value)}
+            placeholder="PIN"
+            className="w-full rounded-xl border p-3 text-gray-900"
+          />
+
+          <div>
+            <p className="text-sm text-gray-500">Roles</p>
+
+            <div className="mt-2 space-y-2">
+              {availableRoles.map((role) => (
+                <label
+                  key={role}
+                  className="flex items-center gap-3 rounded-xl border p-3 text-gray-900"
+                >
+                  <input
+                    type="checkbox"
+                    checked={roles.includes(role)}
+                    onChange={() => toggleRole(role)}
+                    className="h-5 w-5"
+                  />
+
+                  <span>{role}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <input
+            value={hourlyRate}
+            onChange={(event) => setHourlyRate(event.target.value)}
+            placeholder="Hourly Rate"
+            type="number"
+            step="0.01"
+            className="w-full rounded-xl border p-3 text-gray-900"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border p-3 font-bold text-gray-700"
+            >
+              Cancel
+            </button>
 
             <button
               type="button"
-              onClick={() => setEditingEmployee(null)}
-              className="mt-5 w-full rounded-xl bg-red-600 p-3 font-bold text-white"
+              onClick={handleSave}
+              className="rounded-xl bg-red-600 p-3 font-bold text-white"
             >
-              Close
+              Save
             </button>
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
