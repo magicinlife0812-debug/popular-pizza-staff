@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { employees } from "@/app/data/employee";
+import { getEmployees } from "@/app/lib/employeeStorage";
 
 export default function LoginCard() {
   const router = useRouter();
@@ -13,17 +13,22 @@ export default function LoginCard() {
   const [error, setError] = useState("");
 
   function handleLogin() {
-    const foundEmployee = employees.find(
-      (employee) =>
-        employee.id.toLowerCase() === employeeId.trim().toLowerCase() &&
-        employee.pin === pin.trim()
-    );
+    const allEmployees = getEmployees();
+
+const foundEmployee = allEmployees.find(
+  (employee: any) =>
+    employee.id.toLowerCase() === employeeId.trim().toLowerCase() &&
+    employee.pin === pin.trim()
+);
 
     if (!foundEmployee) {
       setError("Invalid Employee ID or PIN");
       return;
     }
-
+    if (foundEmployee.isActive === false) {
+  setError("This employee account is inactive. Please contact a manager.");
+  return;
+}
     localStorage.setItem("currentEmployee", JSON.stringify(foundEmployee));
     localStorage.setItem("employeeProfile", JSON.stringify(foundEmployee));
 
