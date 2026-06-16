@@ -62,3 +62,13 @@ export function toggleEmployeeActive(employeeId: string) {
 
   saveEmployees(updatedEmployees);
 }
+
+export function updateScheduleShift(updatedShift: ScheduleShift) {
+  const shifts = getScheduleShifts();
+
+  const updatedShifts = shifts.map((shift: ScheduleShift) =>
+    shift.id === updatedShift.id ? updatedShift : shift
+  );
+
+  saveScheduleShifts(updatedShifts);
+}
