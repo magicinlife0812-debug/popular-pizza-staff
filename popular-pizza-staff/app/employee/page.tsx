@@ -15,9 +15,12 @@ type MileageType = "under5" | "over5" | "aerosports" | "funzone";
 
 export default function EmployeeDashboard() {
   const [employeeProfile, setEmployeeProfile] = useState({
+  id: employees[1].id,
   name: employees[1].name,
   roles: employees[1].roles,
   hourlyRate: employees[1].hourlyRate,
+  canAccessManager: employees[1].canAccessManager,
+
 });
     const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
@@ -59,7 +62,8 @@ export default function EmployeeDashboard() {
 
     const newShift = {
       id: crypto.randomUUID(),
-      employeeName: employees[1].name,
+      employeeId: employeeProfile.id,
+      employeeName: employeeProfile.name,
       clockIn: clockInTime.toISOString(),
       clockOut: clockOutTime.toISOString(),
       hours: hoursWorked,
@@ -120,12 +124,17 @@ export default function EmployeeDashboard() {
   }, [clockedIn, clockInTime]);
 
  useEffect(() => {
+ const savedEmployee = localStorage.getItem("currentEmployee");
+
+if (savedEmployee) {
+  setEmployeeProfile(JSON.parse(savedEmployee));
+} else {
   const savedProfile = localStorage.getItem("employeeProfile");
 
   if (savedProfile) {
     setEmployeeProfile(JSON.parse(savedProfile));
   }
-
+}
   const saved = localStorage.getItem("activeShift");
 
   if (saved) {
@@ -211,6 +220,15 @@ export default function EmployeeDashboard() {
 >
   Settings
 </Link>
+
+{employeeProfile.canAccessManager && (
+  <Link
+    href="/manager"
+    className="block rounded-xl p-3 hover:bg-gray-100"
+  >
+    Manager Dashboard
+  </Link>
+)}
             </div>
           )}
 
