@@ -184,15 +184,25 @@ if (savedEmployee) {
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
         <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
-          <button
-            type="button"
-            onClick={() => setShowMenu(!showMenu)}
-            className="absolute right-5 top-5 text-3xl font-bold"
-          >
-            ☰
-          </button>
+        
+        <button
+  type="button"
+  aria-label="Open menu"
+  onClick={() => setShowMenu(!showMenu)}
+  className="absolute right-4 top-4 z-30 flex h-12 w-12 items-center justify-center rounded-xl hover:bg-red-700"
+>
+  <span className="pointer-events-none text-4xl leading-none text-white">
+    ☰
+  </span>
+</button>
 
           {showMenu && (
+            <>
+            <div
+      className="fixed inset-0 z-10"
+      onClick={() => setShowMenu(false)}
+    />
+
             <div className="absolute right-5 top-16 z-20 w-48 rounded-2xl bg-white p-3 text-gray-900 shadow-xl">
               <Link
                 href="/employee"
@@ -237,6 +247,7 @@ if (savedEmployee) {
   </Link>
 )}
             </div>
+            </>
           )}
 
           <p className="text-sm opacity-90">Popular Pizza Staff Portal</p>
