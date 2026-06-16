@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { addEmployee, getEmployees } from "@/app/lib/employeeStorage";
 
+const availableRoles = ["Driver", "Kitchen", "Manager"];
+
 type Employee = {
   id: string;
   pin: string;
@@ -22,13 +24,44 @@ export default function ManagerEmployeesPage() {
   const [employeeId, setEmployeeId] = useState("");
   const [pin, setPin] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
+  const [roles, setRoles] = useState<string[]>(["Driver"]);
+  const [canAccessManager, setCanAccessManager] = useState(false);
 
   useEffect(() => {
     setEmployees(getEmployees());
   }, []);
 
+  function toggleRole(role: string) {
+    setRoles((prev) => {
+      if (prev.includes(role)) {
+        return prev.filter((item) => item !== role);
+      }
+
+      return [...prev, role];
+    });
+
+    if (role === "Manager") {
+      setCanAccessManager((prev) => !prev);
+    }
+  }
+
+  function resetForm() {
+    setName("");
+    setEmployeeId("");
+    setPin("");
+    setHourlyRate("");
+    setRoles(["Driver"]);
+    setCanAccessManager(false);
+  }
+
   function handleAddEmployee() {
-    if (!name.trim() || !employeeId.trim() || !pin.trim() || !hourlyRate.trim()) {
+    if (
+      !name.trim() ||
+      !employeeId.trim() ||
+      !pin.trim() ||
+      !hourlyRate.trim() ||
+      roles.length === 0
+    ) {
       return;
     }
 
@@ -36,19 +69,16 @@ export default function ManagerEmployeesPage() {
       id: employeeId.trim().toUpperCase(),
       pin: pin.trim(),
       name: name.trim(),
-      roles: ["Driver"],
+      roles,
       hourlyRate: Number(hourlyRate),
-      canAccessManager: false,
+      canAccessManager,
       isActive: true,
     };
 
     addEmployee(newEmployee);
     setEmployees(getEmployees());
 
-    setName("");
-    setEmployeeId("");
-    setPin("");
-    setHourlyRate("");
+    resetForm();
     setShowAddEmployee(false);
   }
 
@@ -85,7 +115,10 @@ export default function ManagerEmployeesPage() {
 
                 <button
                   type="button"
-                  onClick={() => setShowAddEmployee(false)}
+                  onClick={() => {
+                    resetForm();
+                    setShowAddEmployee(false);
+                  }}
                   className="text-sm font-semibold text-red-600"
                 >
                   Cancel
@@ -113,6 +146,28 @@ export default function ManagerEmployeesPage() {
                   placeholder="PIN"
                   className="w-full rounded-xl border p-3 text-gray-900"
                 />
+
+                <div>
+                  <p className="text-sm text-gray-500">Roles</p>
+
+                  <div className="mt-2 space-y-2">
+                    {availableRoles.map((role) => (
+                      <label
+                        key={role}
+                        className="flex items-center gap-3 rounded-xl border p-3 text-gray-900"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={roles.includes(role)}
+                          onChange={() => toggleRole(role)}
+                          className="h-5 w-5"
+                        />
+
+                        <span>{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
                 <input
                   value={hourlyRate}
@@ -162,6 +217,12 @@ export default function ManagerEmployeesPage() {
               <p className="mt-1 font-bold text-gray-900">
                 ${employee.hourlyRate.toFixed(2)}/hr
               </p>
+
+              {employee.canAccessManager && (
+                <p className="mt-2 text-sm font-semibold text-red-600">
+                  Manager Access
+                </p>
+              )}
             </div>
           ))}
         </div>
