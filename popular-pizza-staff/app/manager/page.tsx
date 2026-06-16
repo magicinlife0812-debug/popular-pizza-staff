@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 type Shift = {
   id: string;
+  employeeId?: string;
   employeeName: string;
   clockIn: string;
   clockOut: string;
@@ -20,6 +21,14 @@ type Employee = {
   roles: string[];
   hourlyRate: number;
   canAccessManager: boolean;
+};
+
+type EmployeeSummary = {
+  employeeId: string;
+  employeeName: string;
+  hours: number;
+  tips: number;
+  mileage: number;
 };
 
 export default function ManagerDashboard() {
@@ -71,8 +80,31 @@ export default function ManagerDashboard() {
   const totalTips = shifts.reduce((sum, shift) => sum + shift.tips, 0);
   const totalMileage = shifts.reduce((sum, shift) => sum + shift.mileage, 0);
 
-  const payroll =
-    totalHours * currentEmployee.hourlyRate + totalTips + totalMileage;
+  const employeeSummaries = shifts.reduce<EmployeeSummary[]>((list, shift) => {
+    const employeeId = shift.employeeId ?? shift.employeeName;
+    const existingEmployee = list.find((item) => item.employeeId === employeeId);
+
+    if (existingEmployee) {
+      existingEmployee.hours += shift.hours;
+      existingEmployee.tips += shift.tips;
+      existingEmployee.mileage += shift.mileage;
+      return list;
+    }
+
+    list.push({
+      employeeId,
+      employeeName: shift.employeeName,
+      hours: shift.hours,
+      tips: shift.tips,
+      mileage: shift.mileage,
+    });
+
+    return list;
+  }, []);
+
+  const payroll = employeeSummaries.reduce((sum, employee) => {
+    return sum + employee.hours * currentEmployee.hourlyRate + employee.tips + employee.mileage;
+  }, 0);
 
   return (
     <main className="min-h-screen bg-gray-100 p-4">
@@ -98,26 +130,35 @@ export default function ManagerDashboard() {
         <div className="rounded-3xl bg-white p-5 shadow">
           <h2 className="text-lg font-bold text-gray-900">Employees</h2>
 
-          <div className="mt-4 rounded-2xl bg-gray-50 p-4">
-            <p className="font-bold text-gray-900">{currentEmployee.name}</p>
+          <div className="mt-4 space-y-3">
+            {employeeSummaries.length === 0 ? (
+              <p className="text-sm text-gray-500">No employee shifts recorded yet.</p>
+            ) : (
+              employeeSummaries.map((employee) => (
+                <div
+                  key={employee.employeeId}
+                  className="rounded-2xl bg-gray-50 p-4"
+                >
+                  <p className="font-bold text-gray-900">
+                    {employee.employeeName}
+                  </p>
 
-            <p className="text-sm text-gray-500">
-              {currentEmployee.roles.join(" • ")}
-            </p>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+                    <p>
+                      <strong>{employee.hours.toFixed(2)}</strong> hrs
+                    </p>
 
-            <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-              <p>
-                <strong>{totalHours.toFixed(2)}</strong> hrs
-              </p>
+                    <p>
+                      <strong>${employee.tips.toFixed(2)}</strong> tips
+                    </p>
 
-              <p>
-                <strong>${totalTips.toFixed(2)}</strong> tips
-              </p>
-
-              <p>
-                <strong>${totalMileage.toFixed(2)}</strong> mileage
-              </p>
-            </div>
+                    <p>
+                      <strong>${employee.mileage.toFixed(2)}</strong> mileage
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
