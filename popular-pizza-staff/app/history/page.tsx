@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { employees } from "@/app/data/employee";
+import AppMenu from "@/app/components/AppMenu";
 
 type Shift = {
   id: string;
@@ -83,10 +84,12 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
-        <div className="rounded-3xl bg-red-600 p-5 text-white shadow-lg">
-          <Link href="/employee" className="text-sm underline">
-            ← Dashboard
-          </Link>
+       <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
+        <AppMenu />
+
+  <Link href="/employee" className="text-sm underline">
+    ← Dashboard
+  </Link>
 
           <h1 className="mt-3 text-2xl font-bold">Shift History</h1>
 

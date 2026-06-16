@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import AppMenu from "@/app/components/AppMenu";
 
 type Shift = {
   id: string;
@@ -109,7 +110,8 @@ export default function ManagerDashboard() {
   return (
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
-        <div className="rounded-3xl bg-red-600 p-5 text-white shadow-lg">
+        <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
+          <AppMenu />
           <Link href="/employee" className="text-sm underline">
             ← Dashboard
           </Link>

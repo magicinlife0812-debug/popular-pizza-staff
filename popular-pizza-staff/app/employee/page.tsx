@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { employees } from "@/app/data/employee";
+import AppMenu from "@/app/components/AppMenu";
+
 
 const mileageRates = {
   under5: 1.5,
@@ -185,70 +187,7 @@ if (savedEmployee) {
       <div className="mx-auto max-w-md space-y-4">
         <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
         
-        <button
-  type="button"
-  aria-label="Open menu"
-  onClick={() => setShowMenu(!showMenu)}
-  className="absolute right-4 top-4 z-30 flex h-12 w-12 items-center justify-center rounded-xl hover:bg-red-700"
->
-  <span className="pointer-events-none text-4xl leading-none text-white">
-    ☰
-  </span>
-</button>
-
-          {showMenu && (
-            <>
-            <div
-      className="fixed inset-0 z-10"
-      onClick={() => setShowMenu(false)}
-    />
-
-            <div className="absolute right-5 top-16 z-20 w-48 rounded-2xl bg-white p-3 text-gray-900 shadow-xl">
-              <Link
-                href="/employee"
-                className="block rounded-xl p-3 hover:bg-gray-100"
-              >
-                Dashboard
-              </Link>
-
-              <Link
-                href="/schedule"
-                className="block rounded-xl p-3 hover:bg-gray-100"
-              >
-                Schedule
-              </Link>
-
-              <Link
-                href="/history"
-                className="block rounded-xl p-3 hover:bg-gray-100"
-              >
-                Shift History
-              </Link>
-
-              <Link
-                href="/pay"
-                className="block rounded-xl p-3 hover:bg-gray-100"
-              >
-                Pay History
-              </Link>
-              <Link
-  href="/settings"
-  className="block rounded-xl p-3 hover:bg-gray-100"
->
-  Settings
-</Link>
-
-{employeeProfile.canAccessManager && (
-  <Link
-    href="/manager"
-    className="block rounded-xl p-3 hover:bg-gray-100"
-  >
-    Manager Dashboard
-  </Link>
-)}
-            </div>
-            </>
-          )}
+          <AppMenu />
 
           <p className="text-sm opacity-90">Popular Pizza Staff Portal</p>
 
