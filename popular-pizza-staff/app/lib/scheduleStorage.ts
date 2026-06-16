@@ -32,3 +32,12 @@ export function deleteScheduleShift(shiftId: string) {
 
   saveScheduleShifts(shifts.filter((shift: ScheduleShift) => shift.id !== shiftId));
 }
+export function updateScheduleShift(updatedShift: ScheduleShift) {
+  const shifts = getScheduleShifts();
+
+  const updatedShifts = shifts.map((shift: ScheduleShift) =>
+    shift.id === updatedShift.id ? updatedShift : shift
+  );
+
+  saveScheduleShifts(updatedShifts);
+}
