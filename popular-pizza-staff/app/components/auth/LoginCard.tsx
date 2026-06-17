@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getEmployees } from "@/app/lib/employeeStorage";
+import { getSupabaseEmployees } from "@/app/lib/supabaseEmployees";
 
 export default function LoginCard() {
   const router = useRouter();
@@ -12,31 +12,33 @@ export default function LoginCard() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
 
-  function handleLogin() {
-    const allEmployees = getEmployees();
-
-const foundEmployee = allEmployees.find(
-  (employee: any) =>
-    employee.id.toLowerCase() === employeeId.trim().toLowerCase() &&
-    employee.pin === pin.trim()
-);
-
+  async function handleLogin() {
     if (
-  employeeId.trim().toLowerCase() === "baban" &&
-  pin.trim() === "2810"
-) {
-  router.push("/vault");
-  return;
-}
+      employeeId.trim().toLowerCase() === "baban" &&
+      pin.trim() === "2810"
+    ) {
+      router.push("/vault");
+      return;
+    }
+
+    const allEmployees = await getSupabaseEmployees();
+
+    const foundEmployee = allEmployees.find(
+      (employee) =>
+        employee.id.toLowerCase() === employeeId.trim().toLowerCase() &&
+        employee.pin === pin.trim()
+    );
 
     if (!foundEmployee) {
       setError("Invalid Employee ID or PIN");
       return;
     }
+
     if (foundEmployee.isActive === false) {
-  setError("This employee account is inactive. Please contact a manager.");
-  return;
-}
+      setError("This employee account is inactive. Please contact a manager.");
+      return;
+    }
+
     localStorage.setItem("currentEmployee", JSON.stringify(foundEmployee));
     localStorage.setItem("employeeProfile", JSON.stringify(foundEmployee));
 
