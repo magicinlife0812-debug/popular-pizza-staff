@@ -222,13 +222,15 @@ export default function SchedulePage() {
             <h1 className="mt-3 text-2xl font-bold">Schedule</h1>
 
             <p className="text-sm opacity-90">
-              {isManagerMode ? "Manager schedule view" : "Your weekly schedule"}
+              {isManagerMode
+                ? "Manager schedule view"
+                : "Your scheduled shifts"}
             </p>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow">
             <p className="text-sm text-gray-500">
-              {isManagerMode ? "Total Labor Hours" : "My Hours"}
+              {isManagerMode ? "Total Scheduled Hours" : "Scheduled Hours"}
             </p>
 
             <h2 className="mt-1 text-3xl font-black text-gray-900">
@@ -297,56 +299,51 @@ export default function SchedulePage() {
             </div>
           )}
 
-          <div className="rounded-3xl bg-white p-5 shadow">
-            <h2 className="text-lg font-bold text-gray-900">
-              {isManagerMode ? "Weekly Hours" : "My Weekly Hours"}
-            </h2>
+          {isManagerMode && (
+            <div className="rounded-3xl bg-white p-5 shadow">
+              <h2 className="text-lg font-bold text-gray-900">
+                Weekly Hours
+              </h2>
 
-            <div className="mt-4 space-y-3">
-              {visibleEmployees.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No scheduled hours yet.
-                </p>
-              ) : (
-                visibleEmployees.map((employee) => (
-                  <div
-                    key={employee.id}
-                    className={`rounded-2xl p-4 ${
-                      employee.id === currentEmployee?.id
-                        ? "bg-red-50 ring-2 ring-red-200"
-                        : "bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex justify-between">
-                      <p className="font-bold text-gray-900">
-                        {employee.name}
-                      </p>
+              <div className="mt-4 space-y-3">
+                {visibleEmployees.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    No scheduled hours yet.
+                  </p>
+                ) : (
+                  visibleEmployees.map((employee) => (
+                    <div
+                      key={employee.id}
+                      className={`rounded-2xl p-4 ${
+                        employee.id === currentEmployee?.id
+                          ? "bg-red-50 ring-2 ring-red-200"
+                          : "bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex justify-between">
+                        <p className="font-bold text-gray-900">
+                          {employee.name}
+                        </p>
 
-                      <p className="font-bold text-green-600">
-                        {getEmployeeHours(employee).toFixed(1)} hrs
-                      </p>
+                        <p className="font-bold text-green-600">
+                          {getEmployeeHours(employee).toFixed(1)} hrs
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="rounded-3xl bg-white p-5 shadow">
             <h2 className="text-lg font-bold text-gray-900">Week View</h2>
 
             <div className="mt-4 space-y-4">
               {days.map((item) => {
-                const dayShifts = shifts.filter((shift) => {
-                  if (shift.date !== item) return false;
-
-                  if (isManagerMode) return true;
-
-                  return (
-                    shift.employeeId === currentEmployee?.id ||
-                    shift.employeeDatabaseId === currentEmployee?.databaseId
-                  );
-                });
+                const dayShifts = shifts.filter(
+                  (shift) => shift.date === item
+                );
 
                 return (
                   <div key={item} className="rounded-2xl bg-gray-50 p-4">
