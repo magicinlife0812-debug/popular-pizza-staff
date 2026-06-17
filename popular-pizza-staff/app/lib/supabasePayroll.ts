@@ -12,6 +12,7 @@ export async function getPayrollShifts() {
       tips,
       mileage,
       employee:employees (
+        id,
         employee_code,
         name,
         hourly_rate
@@ -27,6 +28,7 @@ export async function getPayrollShifts() {
 
   return data.map((shift: any) => ({
     id: shift.id,
+    employeeDatabaseId: shift.employee.id,
     employeeId: shift.employee.employee_code,
     employeeName: shift.employee.name,
     hourlyRate: Number(shift.employee.hourly_rate),

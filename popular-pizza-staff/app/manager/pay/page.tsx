@@ -4,9 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppMenu from "@/app/components/AppMenu";
 import { getPayrollShifts } from "@/app/lib/supabasePayroll";
+import {
+  getPayrollPayments,
+  markPayrollPaid,
+  markPayrollUnpaid,
+} from "@/app/lib/supabasePayrollPayments";
 
 type PayrollShift = {
   id: string;
+  employeeDatabaseId: string;
   employeeId: string;
   employeeName: string;
   hourlyRate: number;
@@ -17,7 +23,20 @@ type PayrollShift = {
   mileage: number;
 };
 
+type PayrollPayment = {
+  id: string;
+  employeeDatabaseId: string;
+  employeeId: string;
+  employeeName: string;
+  periodStart: string;
+  periodEnd: string;
+  amount: number;
+  status: string;
+  paidAt: string | null;
+};
+
 type EmployeePayrollSummary = {
+  employeeDatabaseId: string;
   employeeId: string;
   employeeName: string;
   hourlyRate: number;
@@ -58,6 +77,10 @@ function formatDate(date: Date) {
   });
 }
 
+function formatDateForDatabase(date: Date) {
+  return date.toISOString().split("T")[0];
+}
+
 function formatTime(dateText: string) {
   return new Date(dateText).toLocaleTimeString(undefined, {
     hour: "numeric",
@@ -67,15 +90,19 @@ function formatTime(dateText: string) {
 
 export default function ManagerPayPage() {
   const [shifts, setShifts] = useState<PayrollShift[]>([]);
+  const [payments, setPayments] = useState<PayrollPayment[]>([]);
   const [openPeriodKey, setOpenPeriodKey] = useState<string | null>(null);
   const [openEmployeeId, setOpenEmployeeId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadPayroll() {
-      const payrollShifts = await getPayrollShifts();
-      setShifts(payrollShifts as PayrollShift[]);
-    }
+  async function loadPayroll() {
+    const payrollShifts = await getPayrollShifts();
+    const payrollPayments = await getPayrollPayments();
 
+    setShifts(payrollShifts as PayrollShift[]);
+    setPayments(payrollPayments as PayrollPayment[]);
+  }
+
+  useEffect(() => {
     loadPayroll();
   }, []);
 
@@ -144,6 +171,7 @@ export default function ManagerPayPage() {
         const wages = shift.hours * shift.hourlyRate;
 
         list.push({
+          employeeDatabaseId: shift.employeeDatabaseId,
           employeeId: shift.employeeId,
           employeeName: shift.employeeName,
           hourlyRate: shift.hourlyRate,
@@ -163,6 +191,20 @@ export default function ManagerPayPage() {
     summaries.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
 
     return summaries;
+  }
+
+  function getPaymentStatus(employee: EmployeePayrollSummary, period: PayPeriod) {
+    const periodStart = formatDateForDatabase(period.start);
+    const periodEnd = formatDateForDatabase(period.end);
+
+    const payment = payments.find(
+      (item) =>
+        item.employeeId === employee.employeeId &&
+        item.periodStart === periodStart &&
+        item.periodEnd === periodEnd
+    );
+
+    return payment?.status === "paid" ? "paid" : "unpaid";
   }
 
   function getPeriodTotals(period: PayPeriod) {
@@ -193,6 +235,10 @@ export default function ManagerPayPage() {
       0
     );
 
+    const unpaidCount = employeeSummaries.filter(
+      (employee) => getPaymentStatus(employee, period) !== "paid"
+    ).length;
+
     return {
       employeeSummaries,
       hours,
@@ -200,7 +246,33 @@ export default function ManagerPayPage() {
       mileage,
       wages,
       payroll,
+      unpaidCount,
     };
+  }
+
+  async function handleMarkPaid(employee: EmployeePayrollSummary, period: PayPeriod) {
+    await markPayrollPaid({
+      employeeDatabaseId: employee.employeeDatabaseId,
+      periodStart: formatDateForDatabase(period.start),
+      periodEnd: formatDateForDatabase(period.end),
+      amount: employee.total,
+    });
+
+    await loadPayroll();
+  }
+
+  async function handleMarkUnpaid(
+    employee: EmployeePayrollSummary,
+    period: PayPeriod
+  ) {
+    await markPayrollUnpaid({
+      employeeDatabaseId: employee.employeeDatabaseId,
+      periodStart: formatDateForDatabase(period.start),
+      periodEnd: formatDateForDatabase(period.end),
+      amount: employee.total,
+    });
+
+    await loadPayroll();
   }
 
   return (
@@ -250,6 +322,21 @@ export default function ManagerPayPage() {
                         {period.shifts.length} shift
                         {period.shifts.length === 1 ? "" : "s"}
                       </p>
+
+                      <p
+                        className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                          totals.unpaidCount === 0 &&
+                          totals.employeeSummaries.length > 0
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {totals.employeeSummaries.length === 0
+                          ? "No payroll yet"
+                          : totals.unpaidCount === 0
+                          ? "All Paid"
+                          : `${totals.unpaidCount} Unpaid`}
+                      </p>
                     </div>
 
                     <p className="text-2xl font-black text-green-600">
@@ -286,6 +373,9 @@ export default function ManagerPayPage() {
                         const employeeOpen =
                           openEmployeeId === employee.employeeId;
 
+                        const status = getPaymentStatus(employee, period);
+                        const isPaid = status === "paid";
+
                         return (
                           <div
                             key={employee.employeeId}
@@ -310,6 +400,16 @@ export default function ManagerPayPage() {
                                     {employee.hours.toFixed(2)} hrs •{" "}
                                     {employee.shifts.length} shift
                                     {employee.shifts.length === 1 ? "" : "s"}
+                                  </p>
+
+                                  <p
+                                    className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                                      isPaid
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
+                                    }`}
+                                  >
+                                    {isPaid ? "Paid" : "Unpaid"}
                                   </p>
                                 </div>
 
@@ -338,6 +438,20 @@ export default function ManagerPayPage() {
                                   </strong>
                                 </div>
                               </div>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                isPaid
+                                  ? handleMarkUnpaid(employee, period)
+                                  : handleMarkPaid(employee, period)
+                              }
+                              className={`mt-4 w-full rounded-xl p-3 font-bold text-white ${
+                                isPaid ? "bg-gray-900" : "bg-green-600"
+                              }`}
+                            >
+                              {isPaid ? "Mark Unpaid" : "Mark Paid"}
                             </button>
 
                             {employeeOpen && (
