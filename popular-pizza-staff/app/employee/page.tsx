@@ -1,10 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { employees } from "@/app/data/employee";
 import AppMenu from "@/app/components/AppMenu";
-
+import {
+  clockInShift,
+  clockOutShift,
+  getActiveShift,
+  updateActiveShift,
+} from "@/app/lib/supabaseShifts";
 
 const mileageRates = {
   under5: 1.5,
@@ -15,16 +18,20 @@ const mileageRates = {
 
 type MileageType = "under5" | "over5" | "aerosports" | "funzone";
 
-export default function EmployeeDashboard() {
-  const [employeeProfile, setEmployeeProfile] = useState({
-  id: employees[1].id,
-  name: employees[1].name,
-  roles: employees[1].roles,
-  hourlyRate: employees[1].hourlyRate,
-  canAccessManager: employees[1].canAccessManager,
+type EmployeeProfile = {
+  databaseId: string;
+  id: string;
+  name: string;
+  roles: string[];
+  hourlyRate: number;
+  canAccessManager: boolean;
+};
 
-});
-    const [clockedIn, setClockedIn] = useState(false);
+export default function EmployeeDashboard() {
+  const [employeeProfile, setEmployeeProfile] =
+    useState<EmployeeProfile | null>(null);
+
+  const [clockedIn, setClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
   const [todayHours, setTodayHours] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -33,7 +40,6 @@ export default function EmployeeDashboard() {
   const [tipInput, setTipInput] = useState("");
   const [showTipModal, setShowTipModal] = useState(false);
   const [showMileageModal, setShowMileageModal] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [hasLoadedSavedData, setHasLoadedSavedData] = useState(false);
 
   const [mileageCounts, setMileageCounts] = useState({
@@ -52,67 +58,36 @@ export default function EmployeeDashboard() {
     mileageCounts.aerosports * mileageRates.aerosports +
     mileageCounts.funzone * mileageRates.funzone;
 
-  function updateMileage(type: MileageType, change: number) {
-    setMileageCounts((prev) => ({
-      ...prev,
-      [type]: Math.max(0, prev[type] + change),
-    }));
-  }
+  useEffect(() => {
+    async function loadEmployeeAndShift() {
+      const savedEmployee = localStorage.getItem("currentEmployee");
 
-  function saveCompletedShift(clockOutTime: Date, hoursWorked: number) {
-    if (!clockInTime) return;
+      if (!savedEmployee) return;
 
-    const newShift = {
-      id: crypto.randomUUID(),
-      employeeId: employeeProfile.id,
-      employeeName: employeeProfile.name,
-      clockIn: clockInTime.toISOString(),
-      clockOut: clockOutTime.toISOString(),
-      hours: hoursWorked,
-      tips: totalTips,
-      mileage: totalMileage,
-      mileageCounts,
-      createdAt: new Date().toISOString(),
-    };
+      const employee = JSON.parse(savedEmployee);
+      setEmployeeProfile(employee);
 
-    const oldShifts = JSON.parse(localStorage.getItem("shiftHistory") || "[]");
-    localStorage.setItem(
-      "shiftHistory",
-      JSON.stringify([newShift, ...oldShifts])
-    );
-  }
+      const activeShift = await getActiveShift(employee.databaseId);
 
-  function handleClockButton() {
-    if (!clockedIn) {
-      setClockedIn(true);
-      setClockInTime(new Date());
-      setElapsedSeconds(0);
-      return;
+      if (activeShift) {
+        setClockedIn(true);
+        setClockInTime(new Date(activeShift.clock_in));
+        setTipEntries(activeShift.tip_entries ?? []);
+        setMileageCounts(
+          activeShift.mileage_counts ?? {
+            under5: 0,
+            over5: 0,
+            aerosports: 0,
+            funzone: 0,
+          }
+        );
+      }
+
+      setHasLoadedSavedData(true);
     }
 
-    if (clockInTime) {
-      const clockOutTime = new Date();
-      const hoursWorked =
-        (clockOutTime.getTime() - clockInTime.getTime()) / (1000 * 60 * 60);
-
-      setTodayHours((prev) => prev + hoursWorked);
-      saveCompletedShift(clockOutTime, hoursWorked);
-
-      setTipEntries([]);
-      setMileageCounts({
-        under5: 0,
-        over5: 0,
-        aerosports: 0,
-        funzone: 0,
-      });
-
-      localStorage.removeItem("activeShift");
-    }
-
-    setClockedIn(false);
-    setClockInTime(null);
-    setElapsedSeconds(0);
-  }
+    loadEmployeeAndShift();
+  }, []);
 
   useEffect(() => {
     if (!clockedIn || !clockInTime) return;
@@ -125,80 +100,97 @@ export default function EmployeeDashboard() {
     return () => clearInterval(timer);
   }, [clockedIn, clockInTime]);
 
- useEffect(() => {
- const savedEmployee = localStorage.getItem("currentEmployee");
+  useEffect(() => {
+    if (!hasLoadedSavedData || !employeeProfile || !clockedIn) return;
 
-if (savedEmployee) {
-  setEmployeeProfile(JSON.parse(savedEmployee));
-} else {
-  const savedProfile = localStorage.getItem("employeeProfile");
+    updateActiveShift({
+      employeeDatabaseId: employeeProfile.databaseId,
+      tipEntries,
+      mileageCounts,
+    });
+  }, [hasLoadedSavedData, employeeProfile, clockedIn, tipEntries, mileageCounts]);
 
-  if (savedProfile) {
-    setEmployeeProfile(JSON.parse(savedProfile));
+  function updateMileage(type: MileageType, change: number) {
+    setMileageCounts((prev) => ({
+      ...prev,
+      [type]: Math.max(0, prev[type] + change),
+    }));
   }
-}
-  const saved = localStorage.getItem("activeShift");
 
-  if (saved) {
-    const data = JSON.parse(saved);
+  async function handleClockButton() {
+    if (!employeeProfile) return;
 
-    setClockedIn(data.clockedIn ?? false);
-    setClockInTime(data.clockInTime ? new Date(data.clockInTime) : null);
-    setTodayHours(data.todayHours ?? 0);
-    setTipEntries(data.tipEntries ?? []);
-    setMileageCounts(
-      data.mileageCounts ?? {
+    if (!clockedIn) {
+      await clockInShift({
+        employeeDatabaseId: employeeProfile.databaseId,
+      });
+
+      const activeShift = await getActiveShift(employeeProfile.databaseId);
+
+      if (activeShift) {
+        setClockedIn(true);
+        setClockInTime(new Date(activeShift.clock_in));
+        setElapsedSeconds(0);
+      }
+
+      return;
+    }
+
+    const activeShift = await getActiveShift(employeeProfile.databaseId);
+
+    if (activeShift) {
+      const hoursWorked = await clockOutShift({
+        activeShift,
+        employeeDatabaseId: employeeProfile.databaseId,
+        totalTips,
+        totalMileage,
+        mileageCounts,
+      });
+
+      setTodayHours((prev) => prev + Number(hoursWorked ?? 0));
+
+      setTipEntries([]);
+      setMileageCounts({
         under5: 0,
         over5: 0,
         aerosports: 0,
         funzone: 0,
-      }
-    );
+      });
+    }
+
+    setClockedIn(false);
+    setClockInTime(null);
+    setElapsedSeconds(0);
   }
 
-  setHasLoadedSavedData(true);
-}, []);
-
-
-
-  useEffect(() => {
-    if (!hasLoadedSavedData) return;
-
-    const activeShift = {
-      clockedIn,
-      clockInTime: clockInTime?.toISOString() ?? null,
-      todayHours,
-      tipEntries,
-      mileageCounts,
-    };
-
-    localStorage.setItem("activeShift", JSON.stringify(activeShift));
-  }, [
-    hasLoadedSavedData,
-    clockedIn,
-    clockInTime,
-    todayHours,
-    tipEntries,
-    mileageCounts,
-  ]);
+  if (!employeeProfile) {
+    return (
+      <main className="min-h-screen bg-gray-100 p-4">
+        <div className="mx-auto max-w-md rounded-3xl bg-white p-5 shadow">
+          <p className="text-gray-500">Loading dashboard...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
         <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
-        
           <AppMenu />
 
           <p className="text-sm opacity-90">Popular Pizza Staff Portal</p>
 
-<h1 className="mt-1 text-2xl font-bold">
-  Welcome back, {employeeProfile.name} 👋
-</h1>
+          <h1 className="mt-1 text-2xl font-bold">
+            Welcome back, {employeeProfile.name} 👋
+          </h1>
 
-<p className="mt-2 text-sm font-medium text-red-100">
-  {employeeProfile.roles.join(" • ")} • ${employeeProfile.hourlyRate.toFixed(2)}/hr
-</p>
-</div>
+          <p className="mt-2 text-sm font-medium text-red-100">
+            {employeeProfile.roles.join(" • ")} • $
+            {employeeProfile.hourlyRate.toFixed(2)}/hr
+          </p>
+        </div>
+
         <div className="rounded-3xl bg-white p-6 text-center shadow">
           <p className="text-sm font-medium text-gray-500">Current Status</p>
 
