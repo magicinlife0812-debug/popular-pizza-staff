@@ -49,18 +49,37 @@ export default function SchedulePage() {
   useEffect(() => {
     async function loadData() {
       const savedEmployee = localStorage.getItem("currentEmployee");
-
-      if (savedEmployee) {
-        setCurrentEmployee(JSON.parse(savedEmployee));
-      }
+      const localEmployee = savedEmployee ? JSON.parse(savedEmployee) : null;
 
       const supabaseEmployees = await getSupabaseEmployees();
 
-      setEmployees(
-        supabaseEmployees.filter(
-          (employee) => employee.isActive !== false
-        ) as Employee[]
-      );
+      const activeEmployees = supabaseEmployees.filter(
+        (employee) => employee.isActive !== false
+      ) as Employee[];
+
+      setEmployees(activeEmployees);
+
+      if (localEmployee) {
+        const freshEmployee = activeEmployees.find(
+          (employee) => employee.id === localEmployee.id
+        );
+
+        if (freshEmployee) {
+          setCurrentEmployee(freshEmployee);
+
+          localStorage.setItem(
+            "currentEmployee",
+            JSON.stringify(freshEmployee)
+          );
+
+          localStorage.setItem(
+            "employeeProfile",
+            JSON.stringify(freshEmployee)
+          );
+        } else {
+          setCurrentEmployee(localEmployee);
+        }
+      }
 
       const supabaseShifts = await getSupabaseScheduleShifts();
       setShifts(supabaseShifts);
@@ -83,9 +102,13 @@ export default function SchedulePage() {
     const [endHour, endMinute] = end.split(":").map(Number);
 
     const startTotal = startHour * 60 + startMinute;
-    const endTotal = endHour * 60 + endMinute;
+    let endTotal = endHour * 60 + endMinute;
 
-    return Math.max(0, (endTotal - startTotal) / 60);
+    if (endTotal < startTotal) {
+      endTotal += 24 * 60;
+    }
+
+    return (endTotal - startTotal) / 60;
   }
 
   function formatTime(time: string) {
@@ -100,9 +123,13 @@ export default function SchedulePage() {
     return `${displayHour}:${minute} ${period}`;
   }
 
-  function getEmployeeHours(employeeCode: string) {
+  function getEmployeeHours(employee: Employee) {
     return shifts
-      .filter((shift) => shift.employeeId === employeeCode)
+      .filter(
+        (shift) =>
+          shift.employeeId === employee.id ||
+          shift.employeeDatabaseId === employee.databaseId
+      )
       .reduce(
         (sum, shift) =>
           sum + calculateHours(shift.startTime, shift.endTime),
@@ -116,9 +143,7 @@ export default function SchedulePage() {
   }
 
   async function handleAddShift() {
-    const employee = employees.find(
-      (item) => item.id === selectedEmployeeId
-    );
+    const employee = employees.find((item) => item.id === selectedEmployeeId);
 
     if (!employee || !startTime || !endTime) return;
 
@@ -146,9 +171,7 @@ export default function SchedulePage() {
   async function handleUpdateShift() {
     if (!editingShift || !startTime || !endTime) return;
 
-    const employee = employees.find(
-      (item) => item.id === selectedEmployeeId
-    );
+    const employee = employees.find((item) => item.id === selectedEmployeeId);
 
     if (!employee) return;
 
@@ -176,8 +199,12 @@ export default function SchedulePage() {
     resetShiftForm();
   }
 
+  const visibleEmployees = isManagerMode
+    ? employees
+    : employees.filter((employee) => employee.id === currentEmployee?.id);
+
   const totalLaborHours = employees.reduce(
-    (sum, employee) => sum + getEmployeeHours(employee.id),
+    (sum, employee) => sum + getEmployeeHours(employee),
     0
   );
 
@@ -194,7 +221,9 @@ export default function SchedulePage() {
 
             <h1 className="mt-3 text-2xl font-bold">Schedule</h1>
 
-            <p className="text-sm opacity-90">Weekly team schedule</p>
+            <p className="text-sm opacity-90">
+              {isManagerMode ? "Manager schedule view" : "Your weekly schedule"}
+            </p>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow">
@@ -206,7 +235,7 @@ export default function SchedulePage() {
               {isManagerMode
                 ? totalLaborHours.toFixed(1)
                 : currentEmployee
-                ? getEmployeeHours(currentEmployee.id).toFixed(1)
+                ? getEmployeeHours(currentEmployee).toFixed(1)
                 : "0.0"}{" "}
               hrs
             </h2>
@@ -269,29 +298,37 @@ export default function SchedulePage() {
           )}
 
           <div className="rounded-3xl bg-white p-5 shadow">
-            <h2 className="text-lg font-bold text-gray-900">Weekly Hours</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              {isManagerMode ? "Weekly Hours" : "My Weekly Hours"}
+            </h2>
 
             <div className="mt-4 space-y-3">
-              {employees.map((employee) => (
-                <div
-                  key={employee.id}
-                  className={`rounded-2xl p-4 ${
-                    employee.id === currentEmployee?.id
-                      ? "bg-red-50 ring-2 ring-red-200"
-                      : "bg-gray-50"
-                  }`}
-                >
-                  <div className="flex justify-between">
-                    <p className="font-bold text-gray-900">
-                      {employee.name}
-                    </p>
+              {visibleEmployees.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No scheduled hours yet.
+                </p>
+              ) : (
+                visibleEmployees.map((employee) => (
+                  <div
+                    key={employee.id}
+                    className={`rounded-2xl p-4 ${
+                      employee.id === currentEmployee?.id
+                        ? "bg-red-50 ring-2 ring-red-200"
+                        : "bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex justify-between">
+                      <p className="font-bold text-gray-900">
+                        {employee.name}
+                      </p>
 
-                    <p className="font-bold text-green-600">
-                      {getEmployeeHours(employee.id).toFixed(1)} hrs
-                    </p>
+                      <p className="font-bold text-green-600">
+                        {getEmployeeHours(employee).toFixed(1)} hrs
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -300,9 +337,16 @@ export default function SchedulePage() {
 
             <div className="mt-4 space-y-4">
               {days.map((item) => {
-                const dayShifts = shifts.filter(
-                  (shift) => shift.date === item
-                );
+                const dayShifts = shifts.filter((shift) => {
+                  if (shift.date !== item) return false;
+
+                  if (isManagerMode) return true;
+
+                  return (
+                    shift.employeeId === currentEmployee?.id ||
+                    shift.employeeDatabaseId === currentEmployee?.databaseId
+                  );
+                });
 
                 return (
                   <div key={item} className="rounded-2xl bg-gray-50 p-4">
@@ -318,7 +362,9 @@ export default function SchedulePage() {
                           <div
                             key={shift.id}
                             className={`rounded-xl bg-white p-3 text-sm shadow-sm ${
-                              shift.employeeId === currentEmployee?.id
+                              shift.employeeId === currentEmployee?.id ||
+                              shift.employeeDatabaseId ===
+                                currentEmployee?.databaseId
                                 ? "ring-2 ring-red-300"
                                 : ""
                             }`}

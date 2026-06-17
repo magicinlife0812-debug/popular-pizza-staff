@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppMenu from "@/app/components/AppMenu";
+import { updateSupabaseEmployee } from "@/app/lib/supabaseEmployees";
 
 const availableRoles = ["Driver", "Kitchen", "Manager"];
 
@@ -46,23 +47,25 @@ export default function SettingsPage() {
     );
   }
 
-  function handleSave() {
-    if (!profile) return;
+ async function handleSave() {
+  if (!profile) return;
 
-    const updatedProfile: EmployeeProfile = {
-      ...profile,
-      name,
-      roles,
-      hourlyRate: Number(hourlyRate),
-      canAccessManager: roles.includes("Manager"),
-    };
+  const updatedProfile = {
+    ...profile,
+    name: name.trim(),
+    roles,
+    hourlyRate: Number(hourlyRate),
+    canAccessManager: roles.includes("Manager"),
+  };
 
-    localStorage.setItem("currentEmployee", JSON.stringify(updatedProfile));
-    localStorage.setItem("employeeProfile", JSON.stringify(updatedProfile));
+  await updateSupabaseEmployee(updatedProfile);
 
-    setProfile(updatedProfile);
-    setSaved(true);
-  }
+  localStorage.setItem("currentEmployee", JSON.stringify(updatedProfile));
+  localStorage.setItem("employeeProfile", JSON.stringify(updatedProfile));
+
+  setProfile(updatedProfile);
+  setSaved(true);
+}
 
   if (!profile) {
     return (
