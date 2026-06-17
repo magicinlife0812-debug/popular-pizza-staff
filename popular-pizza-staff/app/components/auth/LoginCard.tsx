@@ -55,7 +55,7 @@ const foundEmployee = allEmployees.find(
           className="mx-auto mb-4"
         />
 
-        <h1 className="text-3xl font-bold text-red-600">Employee Portal</h1>
+        <h1 className="text-3xl font-bold text-red-600">Popular Pizza</h1>
 
         <p className="mt-2 font-semibold text-green-600">Staff Portal</p>
       </div>
