@@ -2,31 +2,38 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { employees } from "@/app/data/employee";
 import AppMenu from "@/app/components/AppMenu";
 
 const availableRoles = ["Driver", "Kitchen", "Manager"];
 
+type EmployeeProfile = {
+  id: string;
+  pin: string;
+  name: string;
+  roles: string[];
+  hourlyRate: number;
+  canAccessManager: boolean;
+  isActive?: boolean;
+};
+
 export default function SettingsPage() {
-  const [name, setName] = useState(employees[1].name);
-  const [roles, setRoles] = useState<string[]>(employees[1].roles);
-  const [hourlyRate, setHourlyRate] = useState(
-    employees[1].hourlyRate.toString()
-  );
+  const [profile, setProfile] = useState<EmployeeProfile | null>(null);
+
+  const [name, setName] = useState("");
+  const [roles, setRoles] = useState<string[]>([]);
+  const [hourlyRate, setHourlyRate] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem("employeeProfile");
+    const savedEmployee = localStorage.getItem("currentEmployee");
 
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
+    if (savedEmployee) {
+      const employee = JSON.parse(savedEmployee);
 
-      setName(profile.name ?? employee.name);
-      setRoles(profile.roles ?? ["Driver"]);
-      setHourlyRate(
-        String(profile.hourlyRate ?? employee.hourlyRate)
-      );
-
+      setProfile(employee);
+      setName(employee.name);
+      setRoles(employee.roles ?? []);
+      setHourlyRate(String(employee.hourlyRate ?? 0));
       setSaved(true);
     }
   }, []);
@@ -40,18 +47,31 @@ export default function SettingsPage() {
   }
 
   function handleSave() {
-    const profile = {
+    if (!profile) return;
+
+    const updatedProfile: EmployeeProfile = {
+      ...profile,
       name,
       roles,
       hourlyRate: Number(hourlyRate),
+      canAccessManager: roles.includes("Manager"),
     };
 
-    localStorage.setItem(
-      "employeeProfile",
-      JSON.stringify(profile)
-    );
+    localStorage.setItem("currentEmployee", JSON.stringify(updatedProfile));
+    localStorage.setItem("employeeProfile", JSON.stringify(updatedProfile));
 
+    setProfile(updatedProfile);
     setSaved(true);
+  }
+
+  if (!profile) {
+    return (
+      <main className="min-h-screen bg-gray-100 p-4">
+        <div className="mx-auto max-w-md rounded-3xl bg-white p-5 shadow">
+          <p className="text-gray-500">Loading settings...</p>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -59,13 +79,12 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-md space-y-4">
         <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
           <AppMenu />
+
           <Link href="/employee" className="text-sm underline">
             ← Dashboard
           </Link>
 
-          <h1 className="mt-3 text-2xl font-bold">
-            Settings
-          </h1>
+          <h1 className="mt-3 text-2xl font-bold">Settings</h1>
         </div>
 
         {saved ? (
@@ -103,15 +122,13 @@ export default function SettingsPage() {
 
               <input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 className="mt-1 w-full rounded-xl border p-3 text-gray-900"
               />
             </div>
 
             <div>
-              <p className="text-sm text-gray-500">
-                Roles
-              </p>
+              <p className="text-sm text-gray-500">Roles</p>
 
               <div className="mt-2 space-y-2">
                 {availableRoles.map((role) => (
@@ -140,9 +157,7 @@ export default function SettingsPage() {
                 type="number"
                 step="0.01"
                 value={hourlyRate}
-                onChange={(e) =>
-                  setHourlyRate(e.target.value)
-                }
+                onChange={(event) => setHourlyRate(event.target.value)}
                 className="mt-1 w-full rounded-xl border p-3 text-gray-900"
               />
             </div>

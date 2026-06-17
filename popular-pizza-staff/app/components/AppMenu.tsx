@@ -67,12 +67,6 @@ export default function AppMenu() {
                   Manager Dashboard
                 </Link>
 
-                <Link
-                  href="/manager/employees"
-                  className="block rounded-xl p-3 hover:bg-gray-100"
-                >
-                  Employees
-                </Link>
               </>
             )}
           </div>

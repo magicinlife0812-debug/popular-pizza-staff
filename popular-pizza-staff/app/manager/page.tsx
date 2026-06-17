@@ -122,36 +122,39 @@ export default function ManagerDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <StatCard title="Total Hours" value={totalHours.toFixed(2)} />
-          <StatCard title="Tips" value={`$${totalTips.toFixed(2)}`} />
-          <StatCard title="Mileage" value={`$${totalMileage.toFixed(2)}`} />
-          <StatCard title="Payroll" value={`$${payroll.toFixed(2)}`} />
-        </div>
+       <div className="grid grid-cols-2 gap-4">
+  <StatCard title="Total Hours" value={totalHours.toFixed(2)} />
+  <StatCard title="Tips" value={`$${totalTips.toFixed(2)}`} />
+  <StatCard title="Mileage" value={`$${totalMileage.toFixed(2)}`} />
 
-         <Link
-    href="/schedule?mode=manager"
+  <Link href="/manager/pay" className="block">
+    <StatCard title="Payroll" value={`$${payroll.toFixed(2)}`} />
+  </Link>
+</div>
+
+<Link
+  href="/schedule?mode=manager"
   className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
 >
   <p className="text-sm text-gray-500">Scheduling</p>
 
-  <h2 className="mt-1 text-xl font-bold text-gray-900">
-    Schedule
-  </h2>
+  <h2 className="mt-1 text-xl font-bold text-gray-900">Schedule</h2>
 
   <p className="mt-2 text-sm text-gray-500">
     Create, edit, and manage weekly shifts
   </p>
 </Link>
 
-        <Link
+<Link
   href="/manager/employees"
   className="block rounded-3xl bg-white p-5 shadow hover:bg-gray-50"
 >
   <p className="text-sm text-gray-500">Staff</p>
+
   <h2 className="mt-1 text-xl font-bold text-gray-900">
     Employee Management
   </h2>
+
   <p className="mt-2 text-sm text-gray-500">
     Add, edit, activate, and deactivate employees
   </p>
