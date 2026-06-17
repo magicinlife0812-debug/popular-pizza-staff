@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  addEmployee,
-  getEmployees,
-  toggleEmployeeActive,
-  updateEmployee,
-} from "@/app/lib/employeeStorage";
+  getSupabaseEmployees,
+  addSupabaseEmployee,
+  updateSupabaseEmployee,
+  toggleSupabaseEmployeeActive,
+} from "@/app/lib/supabaseEmployees";
+
 import AppMenu from "@/app/components/AppMenu";
 
 const availableRoles = ["Driver", "Kitchen", "Manager"];
@@ -38,8 +39,13 @@ export default function ManagerEmployeesPage() {
   const [canAccessManager, setCanAccessManager] = useState(false);
 
   useEffect(() => {
-    setEmployees(getEmployees());
-  }, []);
+  async function loadEmployees() {
+    const supabaseEmployees = await getSupabaseEmployees();
+    setEmployees(supabaseEmployees as any);
+  }
+
+  loadEmployees();
+}, []);
 
   function toggleRole(role: string) {
     setRoles((prev) => {
@@ -64,33 +70,36 @@ export default function ManagerEmployeesPage() {
     setCanAccessManager(false);
   }
 
-  function handleAddEmployee() {
-    if (
-      !name.trim() ||
-      !employeeId.trim() ||
-      !pin.trim() ||
-      !hourlyRate.trim() ||
-      roles.length === 0
-    ) {
-      return;
-    }
-
-    const newEmployee: Employee = {
-      id: employeeId.trim().toUpperCase(),
-      pin: pin.trim(),
-      name: name.trim(),
-      roles,
-      hourlyRate: Number(hourlyRate),
-      canAccessManager,
-      isActive: true,
-    };
-
-    addEmployee(newEmployee);
-    setEmployees(getEmployees());
-
-    resetForm();
-    setShowAddEmployee(false);
+  async function handleAddEmployee() {
+  if (
+    !name.trim() ||
+    !employeeId.trim() ||
+    !pin.trim() ||
+    !hourlyRate.trim() ||
+    roles.length === 0
+  ) {
+    return;
   }
+
+  const newEmployee: any = {
+    databaseId: "",
+    id: employeeId.trim().toUpperCase(),
+    pin: pin.trim(),
+    name: name.trim(),
+    roles,
+    hourlyRate: Number(hourlyRate),
+    canAccessManager,
+    isActive: true,
+  };
+
+  await addSupabaseEmployee(newEmployee);
+
+  const refreshedEmployees = await getSupabaseEmployees();
+  setEmployees(refreshedEmployees as any);
+
+  resetForm();
+  setShowAddEmployee(false);
+}
 
   return (
     <>
@@ -287,11 +296,18 @@ export default function ManagerEmployeesPage() {
 
               <button
                 type="button"
-                onClick={() => {
-                  toggleEmployeeActive(employeeToToggle.id);
-                  setEmployees(getEmployees());
-                  setEmployeeToToggle(null);
-                }}
+                onClick={async () => {
+  await toggleSupabaseEmployeeActive(
+    employeeToToggle as any
+  );
+
+  const refreshedEmployees =
+    await getSupabaseEmployees();
+
+  setEmployees(refreshedEmployees as any);
+  setEmployeeToToggle(null);
+}}
+
                 className={`rounded-xl p-3 font-bold text-white ${
                   employeeToToggle.isActive === false
                     ? "bg-green-600"
@@ -311,11 +327,17 @@ export default function ManagerEmployeesPage() {
   <EditEmployeeModal
     employee={editingEmployee}
     onClose={() => setEditingEmployee(null)}
-    onSave={(updatedEmployee) => {
-      updateEmployee(updatedEmployee);
-      setEmployees(getEmployees());
-      setEditingEmployee(null);
-    }}
+    onSave={async (updatedEmployee) => {
+  await updateSupabaseEmployee(
+    updatedEmployee as any
+  );
+
+  const refreshedEmployees =
+    await getSupabaseEmployees();
+
+  setEmployees(refreshedEmployees as any);
+  setEditingEmployee(null);
+}}
   />
 )}
     </>

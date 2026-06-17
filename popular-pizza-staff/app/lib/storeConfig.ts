@@ -1,0 +1,1 @@
+export const STORE_ID = "03342edc-1bed-4feb-8d7f-01c24bc237d3";
