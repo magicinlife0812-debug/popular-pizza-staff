@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Employee = {
@@ -9,6 +10,8 @@ type Employee = {
 };
 
 export default function AppMenu() {
+  const router = useRouter();
+
   const [showMenu, setShowMenu] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
 
@@ -19,6 +22,13 @@ export default function AppMenu() {
       setCurrentEmployee(JSON.parse(savedEmployee));
     }
   }, []);
+
+  function handleSignOut() {
+    localStorage.removeItem("currentEmployee");
+    localStorage.removeItem("employeeProfile");
+
+    router.push("/");
+  }
 
   return (
     <>
@@ -40,35 +50,64 @@ export default function AppMenu() {
             onClick={() => setShowMenu(false)}
           />
 
-          <div className="absolute right-5 top-16 z-20 w-48 rounded-2xl bg-white p-3 text-gray-900 shadow-xl">
-            <Link href="/employee" className="block rounded-xl p-3 hover:bg-gray-100">
+          <div className="absolute right-5 top-16 z-20 w-56 rounded-2xl bg-white p-3 text-gray-900 shadow-xl">
+            <Link
+              href="/employee"
+              className="block rounded-xl p-3 hover:bg-gray-100"
+            >
               Dashboard
             </Link>
 
-            <Link href="/schedule" className="block rounded-xl p-3 hover:bg-gray-100">
+            <Link
+              href="/schedule"
+              className="block rounded-xl p-3 hover:bg-gray-100"
+            >
               Schedule
             </Link>
 
-            <Link href="/history" className="block rounded-xl p-3 hover:bg-gray-100">
+            <Link
+              href="/history"
+              className="block rounded-xl p-3 hover:bg-gray-100"
+            >
               Shift History
             </Link>
 
-            <Link href="/pay" className="block rounded-xl p-3 hover:bg-gray-100">
+            <Link
+              href="/pay"
+              className="block rounded-xl p-3 hover:bg-gray-100"
+            >
               Pay History
             </Link>
 
-            <Link href="/settings" className="block rounded-xl p-3 hover:bg-gray-100">
+            <Link
+              href="/settings"
+              className="block rounded-xl p-3 hover:bg-gray-100"
+            >
               Settings
             </Link>
 
             {currentEmployee?.canAccessManager && (
               <>
-                <Link href="/manager" className="block rounded-xl p-3 hover:bg-gray-100">
+                <div className="my-2 border-t" />
+
+                <Link
+                  href="/manager"
+                  className="block rounded-xl p-3 hover:bg-gray-100"
+                >
                   Manager Dashboard
                 </Link>
-
               </>
             )}
+
+            <div className="my-2 border-t" />
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="block w-full rounded-xl p-3 text-left font-semibold text-red-600 hover:bg-red-50"
+            >
+              Sign Out
+            </button>
           </div>
         </>
       )}
