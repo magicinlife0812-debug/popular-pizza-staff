@@ -275,6 +275,50 @@ export default function ManagerPayPage() {
     await loadPayroll();
   }
 
+  function exportPeriodCsv(period: PayPeriod) {
+  const totals = getPeriodTotals(period);
+
+  const rows = totals.employeeSummaries.map((employee) => {
+    const status = getPaymentStatus(employee, period);
+
+    return [
+      employee.employeeName,
+      employee.hours.toFixed(2),
+      employee.wages.toFixed(2),
+      employee.tips.toFixed(2),
+      employee.mileage.toFixed(2),
+      employee.total.toFixed(2),
+      status,
+    ];
+  });
+
+  const csvContent = [
+    ["Employee", "Hours", "Wages", "Tips", "Mileage", "Total", "Status"],
+    ...rows,
+  ]
+    .map((row) => row.join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+
+  link.download = `payroll-${formatDateForDatabase(
+    period.start
+  )}-to-${formatDateForDatabase(period.end)}.csv`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
   return (
     <main className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-md space-y-4">
@@ -364,6 +408,14 @@ export default function ManagerPayPage() {
 
                 {isOpen && (
                   <div className="mt-4 space-y-3 border-t pt-4">
+                   <button
+                    type="button"
+                    onClick={() => exportPeriodCsv(period)}
+                    className="w-full rounded-xl bg-gray-900 p-3 font-bold text-white"
+                    >
+                Export Payroll CSV
+                </button>
+                //BABANTANVIR 
                     {totals.employeeSummaries.length === 0 ? (
                       <p className="text-sm text-gray-500">
                         No completed shifts in this pay period yet.
