@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getEmployees } from "@/app/lib/employeeStorage";
-import {
-  addScheduleShift,
-  deleteScheduleShift,
-  getScheduleShifts,
-  ScheduleShift,
-  updateScheduleShift,
-} from "@/app/lib/scheduleStorage";
 import AppMenu from "@/app/components/AppMenu";
-
+import { getSupabaseEmployees } from "@/app/lib/supabaseEmployees";
+import {
+  addSupabaseScheduleShift,
+  deleteSupabaseScheduleShift,
+  getSupabaseScheduleShifts,
+  SupabaseScheduleShift,
+  updateSupabaseScheduleShift,
+} from "@/app/lib/supabaseSchedule";
 
 type Employee = {
+  databaseId: string;
   id: string;
+  pin: string;
   name: string;
   roles: string[];
   hourlyRate: number;
@@ -26,36 +27,46 @@ type Employee = {
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function SchedulePage() {
- const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
 
-
-    const [employees, setEmployees] = useState<Employee[]>([]);
-  const [shifts, setShifts] = useState<ScheduleShift[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [shifts, setShifts] = useState<SupabaseScheduleShift[]>([]);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
-const isManagerMode =
-  searchParams.get("mode") === "manager" &&
-  currentEmployee?.canAccessManager;
 
   const [showAddShift, setShowAddShift] = useState(false);
-  const [editingShift, setEditingShift] = useState<ScheduleShift | null>(null);
+  const [editingShift, setEditingShift] =
+    useState<SupabaseScheduleShift | null>(null);
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [day, setDay] = useState("Mon");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  useEffect(() => {
-    const savedEmployee = localStorage.getItem("currentEmployee");
+  const isManagerMode =
+    searchParams.get("mode") === "manager" &&
+    currentEmployee?.canAccessManager;
 
-    if (savedEmployee) {
-      setCurrentEmployee(JSON.parse(savedEmployee));
+  useEffect(() => {
+    async function loadData() {
+      const savedEmployee = localStorage.getItem("currentEmployee");
+
+      if (savedEmployee) {
+        setCurrentEmployee(JSON.parse(savedEmployee));
+      }
+
+      const supabaseEmployees = await getSupabaseEmployees();
+
+      setEmployees(
+        supabaseEmployees.filter(
+          (employee) => employee.isActive !== false
+        ) as Employee[]
+      );
+
+      const supabaseShifts = await getSupabaseScheduleShifts();
+      setShifts(supabaseShifts);
     }
 
-    setEmployees(
-      getEmployees().filter((employee: Employee) => employee.isActive !== false)
-    );
-
-    setShifts(getScheduleShifts());
+    loadData();
   }, []);
 
   function resetShiftForm() {
@@ -78,20 +89,20 @@ const isManagerMode =
   }
 
   function formatTime(time: string) {
-  if (!time) return "";
+    if (!time) return "";
 
-  const [hourText, minute] = time.split(":");
-  const hour = Number(hourText);
+    const [hourText, minute] = time.split(":");
+    const hour = Number(hourText);
 
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 || 12;
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
 
-  return `${displayHour}:${minute} ${period}`;
-}
+    return `${displayHour}:${minute} ${period}`;
+  }
 
-  function getEmployeeHours(employeeId: string) {
+  function getEmployeeHours(employeeCode: string) {
     return shifts
-      .filter((shift) => shift.employeeId === employeeId)
+      .filter((shift) => shift.employeeId === employeeCode)
       .reduce(
         (sum, shift) =>
           sum + calculateHours(shift.startTime, shift.endTime),
@@ -99,29 +110,32 @@ const isManagerMode =
       );
   }
 
-  function handleAddShift() {
-    const employee = employees.find((item) => item.id === selectedEmployeeId);
+  async function reloadShifts() {
+    const updatedShifts = await getSupabaseScheduleShifts();
+    setShifts(updatedShifts);
+  }
+
+  async function handleAddShift() {
+    const employee = employees.find(
+      (item) => item.id === selectedEmployeeId
+    );
 
     if (!employee || !startTime || !endTime) return;
 
-    const newShift: ScheduleShift = {
-      id: crypto.randomUUID(),
-      employeeId: employee.id,
-      employeeName: employee.name,
+    await addSupabaseScheduleShift({
+      employeeId: employee.databaseId,
       date: day,
       startTime,
       endTime,
-      status: "scheduled",
-    };
+    });
 
-    addScheduleShift(newShift);
-    setShifts(getScheduleShifts());
+    await reloadShifts();
 
     resetShiftForm();
     setShowAddShift(false);
   }
 
-  function openEditShift(shift: ScheduleShift) {
+  function openEditShift(shift: SupabaseScheduleShift) {
     setEditingShift(shift);
     setSelectedEmployeeId(shift.employeeId);
     setDay(shift.date);
@@ -129,34 +143,34 @@ const isManagerMode =
     setEndTime(shift.endTime);
   }
 
-  function handleUpdateShift() {
+  async function handleUpdateShift() {
     if (!editingShift || !startTime || !endTime) return;
 
-    const employee = employees.find((item) => item.id === selectedEmployeeId);
+    const employee = employees.find(
+      (item) => item.id === selectedEmployeeId
+    );
 
     if (!employee) return;
 
-    const updatedShift: ScheduleShift = {
-      ...editingShift,
-      employeeId: employee.id,
-      employeeName: employee.name,
+    await updateSupabaseScheduleShift({
+      id: editingShift.id,
+      employeeId: employee.databaseId,
       date: day,
       startTime,
       endTime,
-    };
+    });
 
-    updateScheduleShift(updatedShift);
-    setShifts(getScheduleShifts());
+    await reloadShifts();
 
     setEditingShift(null);
     resetShiftForm();
   }
 
-  function handleDeleteShift() {
+  async function handleDeleteShift() {
     if (!editingShift) return;
 
-    deleteScheduleShift(editingShift.id);
-    setShifts(getScheduleShifts());
+    await deleteSupabaseScheduleShift(editingShift.id);
+    await reloadShifts();
 
     setEditingShift(null);
     resetShiftForm();
@@ -173,30 +187,32 @@ const isManagerMode =
         <div className="mx-auto max-w-md space-y-4">
           <div className="relative rounded-3xl bg-red-600 p-5 text-white shadow-lg">
             <AppMenu />
+
             <Link href="/employee" className="text-sm underline">
               ← Dashboard
             </Link>
 
             <h1 className="mt-3 text-2xl font-bold">Schedule</h1>
+
             <p className="text-sm opacity-90">Weekly team schedule</p>
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow">
-  <p className="text-sm text-gray-500">
-   {isManagerMode ? "Total Labor Hours" : "My Hours"}
-  </p>
+            <p className="text-sm text-gray-500">
+              {isManagerMode ? "Total Labor Hours" : "My Hours"}
+            </p>
 
-  <h2 className="mt-1 text-3xl font-black text-gray-900">
-   {isManagerMode
-  ? totalLaborHours.toFixed(1)
-      : currentEmployee
-      ? getEmployeeHours(currentEmployee.id).toFixed(1)
-      : "0.0"}{" "}
-    hrs
-  </h2>
-</div>
+            <h2 className="mt-1 text-3xl font-black text-gray-900">
+              {isManagerMode
+                ? totalLaborHours.toFixed(1)
+                : currentEmployee
+                ? getEmployeeHours(currentEmployee.id).toFixed(1)
+                : "0.0"}{" "}
+              hrs
+            </h2>
+          </div>
 
-       {isManagerMode && (
+          {isManagerMode && (
             <div className="rounded-3xl bg-white p-5 shadow">
               {!showAddShift ? (
                 <button
@@ -266,7 +282,9 @@ const isManagerMode =
                   }`}
                 >
                   <div className="flex justify-between">
-                    <p className="font-bold text-gray-900">{employee.name}</p>
+                    <p className="font-bold text-gray-900">
+                      {employee.name}
+                    </p>
 
                     <p className="font-bold text-green-600">
                       {getEmployeeHours(employee.id).toFixed(1)} hrs
@@ -282,7 +300,9 @@ const isManagerMode =
 
             <div className="mt-4 space-y-4">
               {days.map((item) => {
-                const dayShifts = shifts.filter((shift) => shift.date === item);
+                const dayShifts = shifts.filter(
+                  (shift) => shift.date === item
+                );
 
                 return (
                   <div key={item} className="rounded-2xl bg-gray-50 p-4">
@@ -290,7 +310,9 @@ const isManagerMode =
 
                     <div className="mt-3 space-y-2">
                       {dayShifts.length === 0 ? (
-                        <p className="text-sm text-gray-500">No shifts yet.</p>
+                        <p className="text-sm text-gray-500">
+                          No shifts yet.
+                        </p>
                       ) : (
                         dayShifts.map((shift) => (
                           <div
@@ -308,7 +330,8 @@ const isManagerMode =
                                 </p>
 
                                 <p className="text-gray-500">
-                                 {formatTime(shift.startTime)} - {formatTime(shift.endTime)}
+                                  {formatTime(shift.startTime)} -{" "}
+                                  {formatTime(shift.endTime)}
                                 </p>
                               </div>
 
