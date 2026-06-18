@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppMenu from "@/app/components/AppMenu";
+import { getShiftHistory } from "@/app/lib/supabaseShiftHistory";
 
 type Employee = {
   id: string;
@@ -69,22 +70,25 @@ export default function PayHistoryPage() {
   const [openPeriodKey, setOpenPeriodKey] = useState<string | null>(null);
 
   useEffect(() => {
+  async function loadPayHistory() {
     const savedEmployee = localStorage.getItem("currentEmployee");
 
-    if (savedEmployee) {
-      setCurrentEmployee(JSON.parse(savedEmployee));
-    }
+    if (!savedEmployee) return;
 
-    setShifts(JSON.parse(localStorage.getItem("shiftHistory") || "[]"));
-  }, []);
+    const employee = JSON.parse(savedEmployee);
+    setCurrentEmployee(employee);
 
-  const employeeShifts = currentEmployee
-    ? shifts.filter(
-        (shift) =>
-          shift.employeeId === currentEmployee.id ||
-          shift.employeeName === currentEmployee.name
-      )
-    : [];
+    const allShifts = await getShiftHistory();
+
+    setShifts(
+      allShifts.filter((shift: Shift) => shift.employeeId === employee.id)
+    );
+  }
+
+  loadPayHistory();
+}, []);
+
+ const employeeShifts = shifts;
 
   const payPeriods = employeeShifts.reduce<PayPeriod[]>((periods, shift) => {
     const shiftDate = new Date(shift.clockIn);
