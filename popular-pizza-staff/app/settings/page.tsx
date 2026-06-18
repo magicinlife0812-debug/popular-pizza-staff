@@ -8,6 +8,7 @@ import { updateSupabaseEmployee } from "@/app/lib/supabaseEmployees";
 const availableRoles = ["Driver", "Kitchen", "Manager"];
 
 type EmployeeProfile = {
+    databaseId: string;
   id: string;
   pin: string;
   name: string;
@@ -51,12 +52,13 @@ export default function SettingsPage() {
   if (!profile) return;
 
   const updatedProfile = {
-    ...profile,
-    name: name.trim(),
-    roles,
-    hourlyRate: Number(hourlyRate),
-    canAccessManager: roles.includes("Manager"),
-  };
+  ...profile,
+  name: name.trim(),
+  roles,
+  hourlyRate: Number(hourlyRate),
+  canAccessManager: roles.includes("Manager"),
+  isActive: profile.isActive !== false,
+};
 
   await updateSupabaseEmployee(updatedProfile);
 

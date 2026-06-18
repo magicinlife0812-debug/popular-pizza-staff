@@ -19,7 +19,7 @@ export async function getShiftHistory() {
     return [];
   }
 
-  return data.map((shift: any) => ({
+   return (data ?? []).map((shift: any) => ({
     id: shift.id,
     employeeId: shift.employee.employee_code,
     employeeName: shift.employee.name,
@@ -28,17 +28,6 @@ export async function getShiftHistory() {
     hours: Number(shift.hours),
     tips: Number(shift.tips),
     mileage: Number(shift.mileage),
+    mileageCounts: shift.mileage_counts,
   }));
-
-  return data.map((shift: any) => ({
-  id: shift.id,
-  employeeId: shift.employee.employee_code,
-  employeeName: shift.employee.name,
-  clockIn: shift.clock_in,
-  clockOut: shift.clock_out,
-  hours: Number(shift.hours),
-  tips: Number(shift.tips),
-  mileage: Number(shift.mileage),
-  mileageCounts: shift.mileage_counts,
-}));
 }

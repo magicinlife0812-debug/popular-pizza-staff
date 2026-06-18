@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import AppMenu from "@/app/components/AppMenu";
 import { getSupabaseEmployees } from "@/app/lib/supabaseEmployees";
 import {
@@ -26,7 +26,7 @@ type Employee = {
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export default function SchedulePage() {
+function ScheduleContent() {
   const searchParams = useSearchParams();
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -517,5 +517,12 @@ function ShiftForm({
         className="w-full rounded-xl border p-3 text-gray-900"
       />
     </>
+  );
+}
+export default function SchedulePage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-gray-100 p-4" />}>
+      <ScheduleContent />
+    </Suspense>
   );
 }

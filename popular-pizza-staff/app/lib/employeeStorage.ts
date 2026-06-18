@@ -1,5 +1,16 @@
 import { employees as defaultEmployees } from "@/app/data/employee";
 
+type ScheduleShift = {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+  status: "scheduled";
+};
+
 export function getEmployees() {
   const stored = localStorage.getItem("employees");
 
@@ -51,24 +62,4 @@ export function toggleEmployeeActive(employeeId: string) {
   );
 
   saveEmployees(updatedEmployees);
-}
-
-    export function updateEmployee(updatedEmployee: any) {
-  const employees = getEmployees();
-
-  const updatedEmployees = employees.map((employee: any) =>
-    employee.id === updatedEmployee.id ? updatedEmployee : employee
-  );
-
-  saveEmployees(updatedEmployees);
-}
-
-export function updateScheduleShift(updatedShift: ScheduleShift) {
-  const shifts = getScheduleShifts();
-
-  const updatedShifts = shifts.map((shift: ScheduleShift) =>
-    shift.id === updatedShift.id ? updatedShift : shift
-  );
-
-  saveScheduleShifts(updatedShifts);
 }
