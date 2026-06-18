@@ -154,7 +154,7 @@ export default function HistoryPage() {
       0
     );
 
-    const hourlyPay = hours * employeeProfile.hourlyRate;
+    const hourlyPay = hours * (employeeProfile?.hourlyRate ?? 0);
     const estimatedPay = hourlyPay + tips + mileage;
 
     return {
@@ -243,13 +243,6 @@ export default function HistoryPage() {
 
                 {isOpen && (
                   <div className="mt-4 space-y-3 border-t pt-4">
-                    <button
-  type="button"
-  onClick={() => exportPeriodCsv(period)}
-  className="w-full rounded-xl bg-gray-900 p-3 font-bold text-white"
->
-  Export Payroll CSV
-</button>
                     {period.shifts.length === 0 ? (
                       <p className="text-sm text-gray-500">
                         No shifts recorded in this pay period yet.
