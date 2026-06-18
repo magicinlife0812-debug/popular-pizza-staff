@@ -83,13 +83,11 @@ export default function HistoryPage() {
 
       const allShifts = await getShiftHistory();
 
-      if (employee.canAccessManager) {
-        setShifts(allShifts as Shift[]);
-      } else {
-        setShifts(
-          allShifts.filter((shift: Shift) => shift.employeeId === employee.id)
-        );
-      }
+      // Personal history only.
+      // Team-wide shift/payroll views belong in /manager/pay.
+      setShifts(
+        allShifts.filter((shift: Shift) => shift.employeeId === employee.id)
+      );
     }
 
     loadHistory();
@@ -154,7 +152,7 @@ export default function HistoryPage() {
       0
     );
 
-    const hourlyPay = hours * (employeeProfile?.hourlyRate ?? 0);
+   const hourlyPay = hours * (employeeProfile?.hourlyRate ?? 0);
     const estimatedPay = hourlyPay + tips + mileage;
 
     return {
@@ -179,14 +177,10 @@ export default function HistoryPage() {
           <h1 className="mt-3 text-2xl font-bold">Shift History</h1>
 
           <p className="mt-1 text-sm opacity-90">
-            {employeeProfile.canAccessManager
-              ? "Manager View"
-              : `${employeeProfile.name} • ${employeeProfile.roles.join(" • ")}`}
+            {employeeProfile.name} • {employeeProfile.roles.join(" • ")}
           </p>
 
-          <p className="text-sm opacity-90">
-            Biweekly pay period history
-          </p>
+          <p className="text-sm opacity-90">Biweekly pay period history</p>
         </div>
 
         <div className="space-y-3">
@@ -262,31 +256,21 @@ export default function HistoryPage() {
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <p className="font-bold text-gray-900">
-                                  {employeeProfile.canAccessManager
-                                    ? shift.employeeName
-                                    : new Date(
-                                        shift.clockIn
-                                      ).toLocaleDateString()}
+                                  {new Date(
+                                    shift.clockIn
+                                  ).toLocaleDateString()}
                                 </p>
 
-                                {employeeProfile.canAccessManager && (
-                                  <p className="mt-1 text-sm text-gray-500">
-                                    {new Date(
-                                      shift.clockIn
-                                    ).toLocaleDateString()}
-                                  </p>
-                                )}
+                                <p className="mt-1 text-sm text-gray-500">
+                                  {formatTime(shift.clockIn)} {" → "}
+                                  {formatTime(shift.clockOut)}
+                                </p>
                               </div>
 
                               <p className="font-bold text-green-600">
                                 ${shiftTotal.toFixed(2)}
                               </p>
                             </div>
-
-                            <p className="mt-1 text-sm text-gray-500">
-                              {formatTime(shift.clockIn)} {" → "}
-                              {formatTime(shift.clockOut)}
-                            </p>
 
                             <div className="mt-3 space-y-1 text-sm text-gray-600">
                               <div className="flex justify-between">
