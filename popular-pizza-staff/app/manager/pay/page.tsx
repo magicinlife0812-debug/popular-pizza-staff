@@ -415,7 +415,7 @@ export default function ManagerPayPage() {
                     >
                 Export Payroll CSV
                 </button>
-                //BABANTANVIR 
+                
                     {totals.employeeSummaries.length === 0 ? (
                       <p className="text-sm text-gray-500">
                         No completed shifts in this pay period yet.
