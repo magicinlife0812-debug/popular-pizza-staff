@@ -1,0 +1,22 @@
+{
+  "name": "Popular Pizza Staff Portal",
+  "short_name": "Pizza Staff",
+  "description": "Popular Pizza employee scheduling, payroll, and shift management portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#dc2626",
+  "orientation": "portrait",
+  "icons": [
+  {
+    "src": "/logo.jpg",
+    "sizes": "192x192",
+    "type": "image/jpeg"
+  },
+  {
+    "src": "/logo.jpg",
+    "sizes": "512x512",
+    "type": "image/jpeg"
+  }
+]
+}
